@@ -13,6 +13,25 @@ const state = {
   knowledgePreview: false,
   authStep: 1,
   chatFilter: "全部对话",
+  chatSort: "newest",
+  chatSortOpen: false,
+  chatSearchOpen: false,
+  chatSearchMode: "fuzzy",
+  chatSearchModeOpen: false,
+  chatSearchQuery: "",
+  chatSettingsOpen: false,
+  chatSettingsTab: "automation",
+  workHoursEnabled: false,
+  workScheduleCount: 1,
+  workTimeRangeCount: 1,
+  quickMessageSearch: "",
+  customViewStep: 1,
+  customViewName: "",
+  customViewAccess: "all",
+  customViewFilterRows: 1,
+  customViewFieldOpen: false,
+  customViewManual: false,
+  chatSidebarCollapsed: false,
   selectedConversation: null,
   analyticsTab: "ai_chat",
   analyticsRange: "7",
@@ -27,6 +46,7 @@ const state = {
   detailModelOpen: false,
   marketingRuleView: "list",
   marketingRuleId: null,
+  sidebarCollapsed: false,
   marketingNavOpen: true,
   marketingSub: "workbench",
   marketingTagSub: "custom",
@@ -116,13 +136,13 @@ const marketingSubs = [
 ];
 
 const assistantSubs = [
-  ["assistant", "对话智能体"],
-  ["knowledge", "知识管理"],
-  ["skill", "AI技能"],
-  ["tool", "AI工具"],
-  ["auto", "AI自动化"],
-  ["intent", "意图管理"],
-  ["summary", "AI智能总结"],
+  ["assistant", "对话智能体", "⌘"],
+  ["knowledge", "知识管理", "▤"],
+  ["skill", "AI技能", "✣"],
+  ["tool", "AI工具", "⌕"],
+  ["auto", "AI自动化", "ϟ"],
+  ["intent", "意图管理", "♧"],
+  ["summary", "AI智能总结", "▧"],
 ];
 
 const detailTabs = ["设置", "工具", "技能", "知识", "意图", "集成", "成员"];
@@ -159,6 +179,9 @@ const conversationFilters = [
   "人工对话",
   "AI对话",
   "指给我的",
+];
+
+const defaultCustomConversationViews = [
   "未人工回复",
   "收藏",
   "小红书",
@@ -169,19 +192,76 @@ const conversationFilters = [
   "网站页面",
 ];
 
+const customViewStorageKey = "jerry-ai-custom-conversation-views";
+
+function loadCustomConversationViews() {
+  try {
+    const savedViews = JSON.parse(localStorage.getItem(customViewStorageKey) || "[]");
+    return Array.isArray(savedViews)
+      ? [...defaultCustomConversationViews, ...savedViews.filter((name) => typeof name === "string" && !defaultCustomConversationViews.includes(name))]
+      : [...defaultCustomConversationViews];
+  } catch {
+    return [...defaultCustomConversationViews];
+  }
+}
+
+function saveCustomConversationViews(views) {
+  try {
+    const createdViews = views.filter((name) => !defaultCustomConversationViews.includes(name));
+    localStorage.setItem(customViewStorageKey, JSON.stringify(createdViews));
+  } catch {
+    // The group still works for the current session when browser storage is unavailable.
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+const customConversationViews = loadCustomConversationViews();
+
+const quickMessageStorageKey = "jerry-ai-quick-messages";
+
+function loadQuickMessageData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(quickMessageStorageKey) || "{}");
+    return {
+      groups: Array.isArray(saved.groups) ? saved.groups : [],
+      replies: Array.isArray(saved.replies) ? saved.replies : [],
+    };
+  } catch {
+    return { groups: [], replies: [] };
+  }
+}
+
+function saveQuickMessageData() {
+  try {
+    localStorage.setItem(quickMessageStorageKey, JSON.stringify(quickMessageData));
+  } catch {
+    // Keep the current session usable when browser storage is unavailable.
+  }
+}
+
+const quickMessageData = loadQuickMessageData();
+
 const conversationMap = {
   全部对话: [
-    ["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange"],
-    ["canna", "Canna郑", "canna测试", "7小时51分钟", "您好，我可以为您解答物流相关的问题...", "green"],
-    ["demo", "演示联系人", "AI", "12小时44分钟", "好的，您可以点击链接预约演示，咨询报价", "green"],
+    ["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange", false, "13800138001"],
+    ["canna", "Canna郑", "canna测试", "7小时51分钟", "您好，我可以为您解答物流相关的问题...", "green", true, "13900139002"],
+    ["demo", "演示联系人", "AI", "12小时44分钟", "好的，您可以点击链接预约演示，咨询报价", "green", true, "13700137003"],
   ],
-  人工对话: [["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange"]],
+  人工对话: [["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange", false, "13800138001"]],
   AI对话: [
-    ["canna", "Canna郑", "canna测试", "7小时51分钟", "您好，我可以为您解答物流相关的问题...", "green"],
-    ["demo", "演示联系人", "AI", "12小时44分钟", "好的，您可以点击链接预约演示，咨询报价", "green"],
+    ["canna", "Canna郑", "canna测试", "7小时51分钟", "您好，我可以为您解答物流相关的问题...", "green", true, "13900139002"],
+    ["demo", "演示联系人", "AI", "12小时44分钟", "好的，您可以点击链接预约演示，咨询报价", "green", true, "13700137003"],
   ],
-  指给我的: [["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange"]],
-  企业微信托管: [["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange"]],
+  指给我的: [["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange", false, "13800138001"]],
+  企业微信托管: [["group", "欧诚国际物流&集简云对接群", "Kelvin", "2小时14分钟", "你好", "orange", false, "13800138001"]],
 };
 
 const analyticsTabs = [
@@ -561,7 +641,7 @@ function iconBox(text, cls = "assistant-icon") {
 
 function render() {
   app.innerHTML = `
-    <div class="app-shell">
+    <div class="app-shell ${state.sidebarCollapsed ? "nav-collapsed" : ""}">
       ${renderSidebar()}
       <main class="main">
         ${renderTopbar()}
@@ -576,7 +656,7 @@ function render() {
 
 function renderSidebar() {
   return `
-    <aside class="sidebar">
+    <aside class="sidebar ${state.sidebarCollapsed ? "collapsed" : ""}">
       <div class="brand"><span class="brand-mark"></span><span>Jerry AI</span></div>
       <div class="nav">
         ${menu
@@ -585,7 +665,7 @@ function renderSidebar() {
               const active = state.page === id || (id === "ai" && ["knowledgeCreate", "skillEdit"].includes(state.page));
               if (id === "marketing") {
                 return `
-          <div class="nav-item marketing-main ${active ? "active" : ""}" data-marketing-toggle>
+          <div class="nav-item marketing-main ${active ? "active" : ""}" data-marketing-toggle title="${label}">
             <span class="nav-icon">${ico}</span><span>${label}</span><span class="nav-caret">${state.marketingNavOpen ? "⌃" : "⌄"}</span>
           </div>
           ${
@@ -601,14 +681,14 @@ function renderSidebar() {
           }`;
               }
               return `
-          <div class="nav-item ${active ? "active" : ""}" data-page="${id}">
+          <div class="nav-item ${active ? "active" : ""}" data-page="${id}" title="${label}">
             <span class="nav-icon">${ico}</span><span>${label}</span>
           </div>`;
             }
           )
           .join("")}
       </div>
-      <div class="nav-bottom" data-collapse-marketing><span class="nav-icon">☰</span><span>${state.marketingNavOpen ? "收起导航" : "展开导航"}</span></div>
+      <div class="nav-bottom" data-sidebar-collapse title="${state.sidebarCollapsed ? "展开导航" : "收起导航"}"><span class="nav-icon">☰</span><span>${state.sidebarCollapsed ? "展开导航" : "收起导航"}</span></div>
     </aside>
   `;
 }
@@ -710,6 +790,23 @@ function renderHome() {
           )
           .join("")}
       </div>
+      <div class="section-title" style="margin-top:34px">更多帮助</div>
+      <div class="grid-2 help-grid">
+        <div class="card help-card">
+          <div class="help-icon help-icon-doc">¥</div>
+          <div>
+            <div class="card-title">产品教学文章</div>
+            <div>查看更多帮助教学</div>
+          </div>
+        </div>
+        <div class="card help-card">
+          <div class="help-icon help-icon-contact">☎</div>
+          <div>
+            <div class="card-title">联系我们</div>
+            <div>点击这里联系我们</div>
+          </div>
+        </div>
+      </div>
     </section>`;
 }
 
@@ -735,7 +832,7 @@ function renderAiSubnav(active = state.assistantSub) {
     <div class="subnav-title">AI智能体</div>
     ${assistantSubs
       .map(
-        ([id, label]) => `<div class="subnav-item ${active === id ? "active" : ""}" data-assistant-sub="${id}">${label}</div>`
+        ([id, label, icon]) => `<div class="subnav-item ${active === id ? "active" : ""}" data-assistant-sub="${id}"><span class="subnav-icon">${icon}</span><span>${label}</span></div>`
       )
       .join("")}
   </aside>`;
@@ -1574,30 +1671,53 @@ function renderLogs() {
 }
 
 function renderChatWorkplace() {
-  const conversations = conversationMap[state.chatFilter] || [];
+  if (state.chatSettingsOpen) return renderChatSettings();
+  const conversations = sortConversations(conversationMap[state.chatFilter] || []);
+  const visibleConversations = conversations.filter(matchesConversationSearch);
   const hasSelected = !!state.selectedConversation;
   return `
-    <section class="conversation-shell">
-      <div class="rail">${["⌂", "◔", "▣", "⊞", "☏", "▤", "⚙"].map((x, i) => `<div class="${i === 1 ? "active" : ""}">${x}</div>`).join("")}</div>
+    <section class="conversation-shell ${state.chatSidebarCollapsed ? "sidebar-collapsed" : ""}">
       <div class="conv-sidebar">
         <div class="agent-status">
           <span class="avatar">K</span>
           <span>在线 ▾</span>
-          <span class="subtle" style="margin-left:auto">⚙</span>
+          <button class="icon-button" style="margin-left:auto" data-chat-settings title="聚合对话设置">⚙</button>
         </div>
         ${conversationFilters
           .map((x) => `<div class="subnav-item ${state.chatFilter === x ? "active" : ""}" data-chat-filter="${x}">${x}</div>`)
           .join("")}
+        <div class="custom-view-head">
+          <span>自定义视图</span>
+          <button class="icon-button small-icon" data-modal="customView" title="新建视图">＋</button>
+        </div>
+        ${customConversationViews
+          .map((x) => `<div class="subnav-item custom-view-item ${state.chatFilter === x ? "active" : ""}" data-chat-filter="${escapeHtml(x)}">${escapeHtml(x)}</div>`)
+          .join("")}
       </div>
       <div class="conv-list">
         <div class="conv-list-head">
-          <b>‹ ${state.chatFilter}</b>
-          <span class="subtle">⇅ 🔍</span>
+          <div class="conv-list-title">
+            <button class="chat-sidebar-toggle" type="button" data-chat-sidebar-toggle aria-label="${state.chatSidebarCollapsed ? "展开对话分类" : "收起对话分类"}" title="${state.chatSidebarCollapsed ? "展开对话分类" : "收起对话分类"}">
+              <span>≡</span><i>${state.chatSidebarCollapsed ? "›" : "‹"}</i>
+            </button>
+            <b>${state.chatFilter}</b>
+          </div>
+          <div class="conv-list-tools">
+            <button class="icon-button conv-sort-button ${state.chatSortOpen ? "active" : ""}" data-chat-sort-toggle title="对话排序">⇅</button>
+            <button class="icon-button ${state.chatSearchOpen ? "active" : ""}" data-chat-search-toggle title="搜索对话">⌕</button>
+            ${state.chatSortOpen ? `
+              <div class="conv-sort-menu">
+                <button class="${state.chatSort === "newest" ? "active" : ""}" data-chat-sort="newest"><span>新消息优先</span><b>✓</b></button>
+                <button class="${state.chatSort === "unread" ? "active" : ""}" data-chat-sort="unread"><span>未读消息优先</span><b>✓</b></button>
+              </div>
+            ` : ""}
+          </div>
         </div>
+        ${state.chatSearchOpen ? renderConversationSearch() : ""}
         ${
-          conversations.length
-            ? conversations.map((item) => renderConversationItem(item)).join("")
-            : `<div class="empty" style="min-height:240px">暂无${state.chatFilter}消息</div>`
+          visibleConversations.length
+            ? visibleConversations.map((item) => renderConversationItem(item)).join("")
+            : `<div class="empty" style="min-height:240px">${state.chatSearchQuery.trim() ? "未找到匹配的对话" : `暂无${state.chatFilter}消息`}</div>`
         }
         ${renderChannelPromo()}
       </div>
@@ -1608,14 +1728,203 @@ function renderChatWorkplace() {
     </section>`;
 }
 
-function renderConversationItem([id, name, owner, time, last, status]) {
+function renderChatSettings() {
+  const tabs = [["automation", "AI自动化"], ["hours", "工作时间"], ["quick", "快捷消息"], ["forward", "消息转发"]];
+  return `<section class="conversation-shell chat-settings-shell">
+    <div class="conv-sidebar">
+      <div class="agent-status"><span class="avatar">K</span><span>在线 ▾</span><button class="icon-button active" style="margin-left:auto" data-chat-settings title="返回对话">⚙</button></div>
+      ${conversationFilters.map((x) => `<div class="subnav-item" data-chat-filter="${x}">${x}</div>`).join("")}
+      <div class="custom-view-head"><span>自定义视图</span><button class="icon-button small-icon" data-modal="customView">＋</button></div>
+      ${customConversationViews.map((x) => `<div class="subnav-item custom-view-item" data-chat-filter="${escapeHtml(x)}">${escapeHtml(x)}</div>`).join("")}
+    </div>
+    <main class="chat-settings-main">
+      <nav class="chat-settings-tabs">${tabs.map(([id, label]) => `<button class="${state.chatSettingsTab === id ? "active" : ""}" data-chat-settings-tab="${id}">${label}</button>`).join("")}</nav>
+      <div class="chat-settings-content">${renderChatSettingsContent()}</div>
+    </main>
+  </section>`;
+}
+
+function renderChatSettingsContent() {
+  if (state.chatSettingsTab === "hours") return renderWorkHoursSettings();
+
+  if (state.chatSettingsTab === "quick") return renderQuickMessageSettings();
+
+  if (state.chatSettingsTab === "forward") return `<section class="chat-config-card">
+    <div class="chat-config-title"><div><b>消息转发</b><p>将人工客服及 AI 助手消息转发到外部渠道</p></div><span class="switch" data-switch></span></div>
+    <div class="settings-form-grid"><label>转发渠道<select class="select"><option>企业微信群机器人</option><option>邮件</option><option>Webhook</option></select></label><label>消息范围<select class="select"><option>全部消息</option><option>仅人工消息</option><option>仅 AI 消息</option></select></label></div>
+    <label class="settings-full-field">Webhook 地址<input class="input" placeholder="https://example.com/webhook"></label>
+    <button class="button primary" data-demo-action="消息转发设置已保存">保存设置</button>
+  </section>`;
+
+  return `<div class="chat-automation-list">
+    ${renderAutomationCard("AI 自动跟进", "在用户长时间未回复时，由 AI 自动发送跟进消息", true, `
+      <label>用户未回复时间（分钟）<input class="input" type="number" value="10"></label>
+      <label>选择指定对话分组<select class="select"><option>全部对话</option><option>人工对话</option><option>AI对话</option></select></label>
+      <label class="settings-full-field">回复内容<textarea class="textarea" placeholder="请输入自动跟进内容"></textarea></label>`)}
+    ${renderAutomationCard("结束时 AI 自动回复", "当人工结束对话后，由 AI 补充回复或进行满意度询问", false, `
+      <label>工作时间延时（分钟）<input class="input" type="number" value="10"></label>
+      <label>非工作时间延时（分钟）<input class="input" type="number" value="0"></label>
+      <label>超时会话标识<select class="select"><option>显示“超时”标识</option><option>不显示</option></select></label>`)}
+    ${renderAutomationCard("AI 多媒体内容发送", "允许 AI 回复图片、视频、文件和音频素材", true, `
+      <label><input type="checkbox" checked> 图片格式</label><label><input type="checkbox" checked> 视频格式</label><label><input type="checkbox" checked> 文件格式</label><label><input type="checkbox" checked> 音频格式</label>`)}
+    ${renderAutomationCard("AI 长回复内容拆分", "将较长回复拆分为多条消息，提升阅读体验", false, `
+      <label>最大回复内容字数<input class="input" type="number" value="300"></label><label>最大拆分回复条数<input class="input" type="number" value="3"></label>`)}
+    ${renderAutomationCard("自定义 AI 内容提取/总结", "配置对话总结提示词及触发条件", false, `
+      <label>对话分组选择<select class="select"><option>请选择</option>${customConversationViews.map((x) => `<option>${escapeHtml(x)}</option>`).join("")}</select></label>
+      <label>至少包含对话条数<input class="input" type="number" value="4"></label>
+      <label class="settings-full-field">总结提示词<textarea class="textarea" placeholder="请输入 AI 总结对话时的提示词"></textarea></label>`)}
+    <div class="chat-settings-tip"><b>小技巧</b><span>可通过 AI 流程或连接器，将对话总结内容同步到表格、数据库或消息渠道中。</span></div>
+  </div>`;
+}
+
+function renderWorkHoursSettings() {
+  const disabled = state.workHoursEnabled ? "" : "disabled";
+  const rangeRows = Array.from({ length: state.workTimeRangeCount }, (_, index) => `<div class="work-hours-time-row">
+    <label class="work-hours-time"><span>◷</span><input type="time" aria-label="开始时间" ${disabled}></label>
+    <span class="work-hours-to">至</span>
+    <label class="work-hours-time"><span>◷</span><input type="time" aria-label="结束时间" ${disabled}></label>
+    ${index === 0 ? `<button class="work-hours-circle-add" type="button" data-add-work-time title="新增时间段" ${disabled}>＋</button>` : `<button class="work-hours-circle-remove" type="button" data-remove-work-time title="删除时间段">−</button>`}
+  </div>`).join("");
+  const schedules = Array.from({ length: state.workScheduleCount }, (_, index) => `<div class="work-hours-schedule">
+    <label class="work-hours-field-title">工作时间<span>*</span></label>
+    <select class="work-hours-select" aria-label="选择工作日" ${disabled}>
+      <option value="">请选择工作日</option>
+      <option>周一至周五</option><option>每天</option><option>自定义</option>
+    </select>
+    <div class="work-hours-ranges">${rangeRows}</div>
+    ${index > 0 ? `<button class="work-hours-delete-schedule" type="button" data-remove-work-schedule>删除此工作时间</button>` : ""}
+  </div>`).join("");
+
+  return `<section class="work-hours-page">
+    <header class="work-hours-heading">
+      <h2>工作时间设置</h2>
+      <p>开启后，可设置人工服务工作时间，当访客在非工作时间咨询时，按照设置的处理方式对访客进行回复 <button class="link-button" type="button">了解更多</button></p>
+    </header>
+
+    <div class="work-hours-toggle-row">
+      <span>是否开启工作时间</span>
+      <button class="work-hours-switch ${state.workHoursEnabled ? "on" : ""}" type="button" role="switch" aria-checked="${state.workHoursEnabled}" data-work-hours-switch><i></i></button>
+    </div>
+
+    <div class="work-hours-schedules">${schedules}</div>
+    <button class="work-hours-add-schedule" type="button" data-add-work-schedule ${disabled}>＋ 新增工作时间</button>
+
+    <div class="work-hours-divider"></div>
+    <section class="after-hours-section">
+      <h3>非工作时间处理方式</h3>
+      <p>如果不在上述工作时间如何处理</p>
+      <select class="work-hours-select after-hours-select" aria-label="非工作时间处理方式">
+        <option>A: 回复文本内容</option>
+        <option>B: 转接 AI 助手</option>
+        <option>C: 留言并等待人工回复</option>
+      </select>
+      <div class="after-hours-editor">
+        <div class="after-hours-toolbar" aria-label="文本格式工具栏">
+          <button>H</button><button><b>B</b></button><button><i>I</i></button><button>S̶</button><span></span><button>☷</button><button>1₂</button><span></span><button>≡</button><button>☰</button><span></span><button>↗</button><button>▣</button><button>▦⌄</button><button>▧⌄</button><span></span><button class="muted">↶</button><button class="muted">↷</button>
+        </div>
+        <div class="after-hours-content" contenteditable="true">抱歉，现在为非工作时间，请您在我们的工作时间再次联系，谢谢</div>
+      </div>
+    </section>
+
+    <footer class="work-hours-footer">
+      <button class="button" type="button" data-chat-settings-back>返回</button>
+      <button class="button primary" type="button" data-demo-action="工作时间设置已保存" ${disabled}>确认</button>
+    </footer>
+  </section>`;
+}
+
+function renderQuickMessageSettings() {
+  const query = state.quickMessageSearch.trim().toLowerCase();
+  const visibleGroups = quickMessageData.groups.filter((group) => {
+    const replies = quickMessageData.replies.filter((reply) => reply.groupId === group.id);
+    return !query || group.name.toLowerCase().includes(query) || replies.some((reply) => `${reply.title} ${reply.content}`.toLowerCase().includes(query));
+  });
+  const ungroupedReplies = quickMessageData.replies.filter((reply) => !reply.groupId && (!query || `${reply.title} ${reply.content}`.toLowerCase().includes(query)));
+  const hasData = quickMessageData.groups.length || quickMessageData.replies.length;
+  return `<section class="quick-message-page">
+    <div class="quick-message-heading"><b>快捷信息管理</b><p>创建一个新的快捷信息，可以在对话中使用他来进行快捷回复</p></div>
+    <div class="quick-message-toolbar">
+      <button class="button primary" data-modal="quickReply">＋ 新增快捷回复</button>
+      <button class="button" data-modal="quickGroup">＋ 新增分组</button>
+      <label class="quick-message-search"><span>⌕</span><input data-quick-message-search value="${escapeHtml(state.quickMessageSearch)}" placeholder="搜索"></label>
+    </div>
+    ${!hasData ? `<div class="quick-message-empty"><div class="quick-empty-art">▤</div><span>暂无分组</span></div>` : `
+      <div class="quick-group-list">
+        ${visibleGroups.map((group) => renderQuickMessageGroup(group, query)).join("")}
+        ${ungroupedReplies.length ? `<article class="quick-group-card"><header><b>未分组</b><span>${ungroupedReplies.length} 条快捷回复</span></header>${ungroupedReplies.map(renderQuickReplyRow).join("")}</article>` : ""}
+        ${!visibleGroups.length && !ungroupedReplies.length ? `<div class="quick-message-empty compact"><span>未找到匹配内容</span></div>` : ""}
+      </div>`}
+  </section>`;
+}
+
+function renderQuickMessageGroup(group, query) {
+  const replies = quickMessageData.replies.filter((reply) => reply.groupId === group.id && (!query || `${reply.title} ${reply.content}`.toLowerCase().includes(query) || group.name.toLowerCase().includes(query)));
+  return `<article class="quick-group-card">
+    <header><b>${escapeHtml(group.name)}</b><span>${replies.length} 条快捷回复</span></header>
+    ${replies.length ? replies.map(renderQuickReplyRow).join("") : `<div class="quick-group-empty">该分组暂无快捷回复</div>`}
+  </article>`;
+}
+
+function renderQuickReplyRow(reply) {
+  return `<div class="quick-message-row"><b>${escapeHtml(reply.title)}</b><span>${escapeHtml(reply.content)}</span><button class="icon-button" data-quick-reply-delete="${reply.id}" title="删除">×</button></div>`;
+}
+
+function renderAutomationCard(title, description, enabled, fields) {
+  return `<section class="chat-config-card">
+    <div class="chat-config-title"><div><b>${title}</b><p>${description}　<a>了解更多</a></p></div><span class="switch ${enabled ? "on" : ""}" data-switch></span></div>
+    <div class="settings-form-grid">${fields}</div>
+    <div class="automation-controls"><label>停止回复条件 <span class="switch" data-switch></span></label><label>对话记录条数 <input type="range" min="1" max="10" value="2"> 2 条</label></div>
+    <button class="button primary" data-demo-action="${title}设置已保存">保存设置</button>
+  </section>`;
+}
+
+function renderConversationSearch() {
+  const modeLabels = { fuzzy: "模糊匹配", exact: "精确匹配", phone: "手机号" };
+  return `<div class="conv-search-panel">
+    <div class="conv-search-mode">
+      <button data-chat-search-mode-toggle>${modeLabels[state.chatSearchMode]} <span>⌄</span></button>
+      ${state.chatSearchModeOpen ? `<div class="conv-search-mode-menu">
+        ${Object.entries(modeLabels).map(([value, label]) => `<button class="${state.chatSearchMode === value ? "active" : ""}" data-chat-search-mode="${value}"><span>${label}</span><b>✓</b></button>`).join("")}
+      </div>` : ""}
+    </div>
+    <input data-chat-search-input value="${escapeHtml(state.chatSearchQuery)}" placeholder="搜索..." autocomplete="off">
+    <button class="conv-search-close" data-chat-search-close title="关闭搜索">×</button>
+  </div>`;
+}
+
+function matchesConversationSearch(item) {
+  const query = state.chatSearchQuery.trim().toLowerCase();
+  if (!query) return true;
+  const [, name, owner, , last, , , phone = ""] = item;
+  if (state.chatSearchMode === "phone") {
+    const digits = query.replace(/\D/g, "");
+    return Boolean(digits) && String(phone).includes(digits);
+  }
+  const fields = [name, owner, last].map((value) => String(value).toLowerCase());
+  return state.chatSearchMode === "exact" ? fields.some((value) => value === query) : fields.some((value) => value.includes(query));
+}
+
+function getConversationAgeMinutes(time) {
+  const hours = Number(time.match(/(\d+)小时/)?.[1] || 0);
+  const minutes = Number(time.match(/(\d+)分钟/)?.[1] || 0);
+  return hours * 60 + minutes;
+}
+
+function sortConversations(conversations) {
+  return [...conversations].sort((a, b) => {
+    if (state.chatSort === "unread" && Boolean(a[6]) !== Boolean(b[6])) return a[6] ? -1 : 1;
+    return getConversationAgeMinutes(a[3]) - getConversationAgeMinutes(b[3]);
+  });
+}
+
+function renderConversationItem([id, name, owner, time, last, status, unread]) {
   const active = state.selectedConversation === id ? "active" : "";
   return `<div class="conv-item ${active}" data-conversation="${id}">
     ${iconBox(id === "group" ? "群" : id === "demo" ? "演" : "K", "channel-icon")}
     <div style="min-width:0; flex:1">
       <div style="display:flex; justify-content:space-between; gap:8px">
         <b style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${name}</b>
-        <span class="subtle" style="white-space:nowrap">${time}</span>
+        <span class="subtle" style="white-space:nowrap">${unread ? `<i class="unread-dot"></i>` : ""}${time}</span>
       </div>
       <div class="subtle" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis"> ${owner} ${last}</div>
     </div>
@@ -2725,6 +3034,15 @@ function renderModal() {
   if (state.modal === "importSkill") {
     return renderImportSkillModal();
   }
+  if (state.modal === "customView") {
+    return renderCustomViewModal();
+  }
+  if (state.modal === "quickGroup") {
+    return renderQuickGroupModal();
+  }
+  if (state.modal === "quickReply") {
+    return renderQuickReplyModal();
+  }
   if (state.modal === "importKnowledge") {
     return modal("导入知识库", `
       <div class="grid-2">
@@ -2990,9 +3308,133 @@ function renderImportSkillModal() {
   </div>`;
 }
 
+function renderQuickReplyModal() {
+  window.__modalOk = () => {
+    const content = document.getElementById("quickReplyContent")?.textContent.trim();
+    const groupId = document.getElementById("quickReplyGroup")?.value || "";
+    if (!groupId || !content) return showToast("请选择分组并填写回复内容");
+    const title = content.length > 24 ? `${content.slice(0, 24)}…` : content;
+    quickMessageData.replies.push({ id: `reply-${Date.now()}`, title, content, groupId });
+    saveQuickMessageData();
+    state.modal = null;
+    showToast("快捷回复创建成功");
+  };
+  return `<div class="modal-backdrop quick-reply-backdrop"><div class="modal quick-reply-modal">
+    <div class="quick-reply-head">新增快捷回复<button type="button" data-close-modal aria-label="关闭">×</button></div>
+    <div class="quick-reply-body">
+      <label class="quick-reply-label" for="quickReplyGroup">选择分组 <span>*</span></label>
+      <select id="quickReplyGroup" class="quick-reply-group" data-quick-reply-required>
+        <option value=""></option>
+        ${quickMessageData.groups.map((group) => `<option value="${group.id}">${escapeHtml(group.name)}</option>`).join("")}
+      </select>
+      <div class="quick-reply-editor">
+        <div class="quick-reply-editor-tools" aria-label="文本格式工具栏">
+          <button type="button" data-quick-format="formatBlock" data-format-value="h3">H</button>
+          <button type="button" data-quick-format="bold"><b>B</b></button>
+          <button type="button" data-quick-format="italic"><i>I</i></button>
+          <button type="button" data-quick-format="strikeThrough">S̶</button><i></i>
+          <button type="button" data-quick-format="insertUnorderedList">☷</button>
+          <button type="button" data-quick-format="insertOrderedList">1₂</button><i></i>
+          <button type="button" data-quick-format="outdent">≡</button>
+          <button type="button" data-quick-format="indent">≡</button><i></i>
+          <button type="button" title="插入链接">↗</button><button type="button" title="插入图片">▣</button><button type="button" title="插入表格">▦⌄</button><button type="button" title="插入内容">▧⌄</button><i></i>
+          <button type="button" class="muted" data-quick-format="undo">↶</button><button type="button" class="muted" data-quick-format="redo">↷</button>
+        </div>
+        <div id="quickReplyContent" class="quick-reply-editor-content" contenteditable="true" data-quick-reply-required></div>
+      </div>
+    </div>
+    <div class="quick-reply-foot"><button class="button" type="button" data-close-modal>取消</button><button class="button primary" type="button" data-modal-ok disabled>保存</button></div>
+  </div></div>`;
+}
+
+function renderQuickGroupModal() {
+  window.__modalOk = () => {
+    const name = document.getElementById("quickGroupName")?.value.trim();
+    if (!name) return showToast("请输入分组名称");
+    if (quickMessageData.groups.some((group) => group.name === name)) return showToast("该分组已存在");
+    quickMessageData.groups.push({ id: `group-${Date.now()}`, name });
+    saveQuickMessageData();
+    state.modal = null;
+    showToast("分组创建成功");
+  };
+  return `<div class="modal-backdrop quick-group-backdrop">
+    <div class="modal quick-group-modal" role="dialog" aria-modal="true" aria-labelledby="quickGroupTitle">
+      <div class="quick-group-modal-head">
+        <span id="quickGroupTitle">新增分组</span>
+        <button type="button" data-close-modal aria-label="关闭">×</button>
+      </div>
+      <div class="quick-group-modal-body">
+        <label for="quickGroupName">分组名称 <span>*</span></label>
+        <input id="quickGroupName" maxlength="30" placeholder="请输入分组名称" autocomplete="off" autofocus>
+      </div>
+      <div class="quick-group-modal-foot">
+        <button class="button" type="button" data-close-modal>取消</button>
+        <button class="button primary" type="button" data-modal-ok>保存</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 function modal(title, body, okText, onOk) {
   window.__modalOk = onOk;
   return `<div class="modal-backdrop"><div class="modal"><div class="modal-head">${title}<button class="button ghost" data-close-modal>×</button></div><div class="modal-body">${body}</div><div class="modal-foot"><button class="button" data-close-modal>取消</button><button class="button primary" data-modal-ok>${okText}</button></div></div></div>`;
+}
+
+function renderCustomViewModal() {
+  const step = state.customViewStep;
+  const escapedViewName = state.customViewName
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/"/g, "&quot;");
+  const stepLabel = (n, text) => {
+    const className = [step === n ? "active" : "", n > step ? "locked" : ""].filter(Boolean).join(" ");
+    const navigation = n < step ? ` data-custom-view-step="${n}"` : "";
+    return `<span class="${className}"${navigation}>${n}.${text}</span>`;
+  };
+  const body = {
+    1: `
+      <div class="form-row">
+        <div class="label">视图名称</div>
+        <div class="view-name-wrap">
+          <input class="input" maxlength="100" data-custom-view-name value="${escapedViewName}">
+          <span data-custom-view-name-count>${state.customViewName.length} / 100</span>
+        </div>
+      </div>
+    `,
+    2: `
+      <div class="label">权限范围</div>
+      <div class="radio-row">
+        <label data-custom-view-access="all"><span class="radio ${state.customViewAccess === "all" ? "on" : ""}"></span>全员可访问</label>
+        <label data-custom-view-access="custom"><span class="radio ${state.customViewAccess === "custom" ? "on" : ""}"></span>自定义访问权限</label>
+      </div>
+      ${state.customViewAccess === "custom" ? `
+        <div class="permission-picker">
+          <div>
+            <div class="search-box">⌕ 搜索</div>
+            <label class="member-option"><input type="checkbox"> <span class="avatar">Kelvin</span> Kelvin</label>
+          </div>
+          <div><b>已选：0 人</b></div>
+        </div>
+      ` : ""}
+    `,
+    3: `
+      <div class="manual-view-note">
+        <b>手动分组视图</b>
+        <span>该视图不会根据筛选条件自动加入对话。创建后，可在对话页面右上角的分组入口，将当前对话手动添加到这个视图中。</span>
+      </div>
+    `,
+  }[step];
+  return `<div class="modal-backdrop"><div class="modal custom-view-modal">
+    <div class="modal-head">新建视图<button class="button ghost" data-close-modal>×</button></div>
+    <div class="view-steps">
+      ${stepLabel(1, "基本信息")}<b>›</b>${stepLabel(2, "访问权限")}<b>›</b>${stepLabel(3, "筛选条件")}
+    </div>
+    <div class="modal-body custom-view-body">${body}<a class="learn-link">了解更多</a></div>
+    <div class="modal-foot">
+      ${step > 1 ? `<button class="button" data-custom-view-prev>上一步</button>` : `<button class="button" data-close-modal>取消</button>`}
+      <button class="button primary${step === 1 && !state.customViewName.trim() ? " disabled" : ""}" data-custom-view-next ${step === 1 && !state.customViewName.trim() ? "disabled" : ""}>${step === 3 ? "确认" : "下一步"}</button>
+    </div>
+  </div></div>`;
 }
 
 function renderFlowPickerModal(title, groups, active, dataName, stateKey) {
@@ -3175,8 +3617,8 @@ function bindEvents() {
       setState({ page: "marketing", selectedAssistant: null, marketingNavOpen: state.page === "marketing" ? !state.marketingNavOpen : true });
     });
   }
-  const collapseMarketing = document.querySelector("[data-collapse-marketing]");
-  if (collapseMarketing) collapseMarketing.addEventListener("click", () => setState({ marketingNavOpen: !state.marketingNavOpen }));
+  const sidebarCollapse = document.querySelector("[data-sidebar-collapse]");
+  if (sidebarCollapse) sidebarCollapse.addEventListener("click", () => setState({ sidebarCollapsed: !state.sidebarCollapsed }));
   document.querySelectorAll("[data-marketing-sub]").forEach((el) =>
     el.addEventListener("click", () => setState({ page: "marketing", selectedAssistant: null, marketingNavOpen: true, marketingSub: el.dataset.marketingSub }))
   );
@@ -3278,8 +3720,89 @@ function bindEvents() {
   );
   document.querySelectorAll("[data-wechat-tab]").forEach((el) => el.addEventListener("click", () => setState({ wechatTab: el.dataset.wechatTab })));
   document.querySelectorAll("[data-chat-filter]").forEach((el) =>
-    el.addEventListener("click", () => setState({ chatFilter: el.dataset.chatFilter, selectedConversation: null }))
+    el.addEventListener("click", () => setState({ chatFilter: el.dataset.chatFilter, selectedConversation: null, chatSettingsOpen: false, chatSortOpen: false, chatSearchModeOpen: false, chatSearchQuery: "" }))
   );
+  document.querySelectorAll("[data-chat-settings]").forEach((el) =>
+    el.addEventListener("click", () => setState({ chatSettingsOpen: !state.chatSettingsOpen, chatSearchOpen: false, chatSortOpen: false }))
+  );
+  document.querySelector("[data-chat-sidebar-toggle]")?.addEventListener("click", () =>
+    setState({ chatSidebarCollapsed: !state.chatSidebarCollapsed, chatSortOpen: false, chatSearchModeOpen: false })
+  );
+  document.querySelectorAll("[data-chat-settings-tab]").forEach((el) =>
+    el.addEventListener("click", () => setState({ chatSettingsTab: el.dataset.chatSettingsTab }))
+  );
+  document.querySelector("[data-work-hours-switch]")?.addEventListener("click", () =>
+    setState({ workHoursEnabled: !state.workHoursEnabled })
+  );
+  document.querySelector("[data-add-work-time]")?.addEventListener("click", () =>
+    setState({ workTimeRangeCount: state.workTimeRangeCount + 1 })
+  );
+  document.querySelectorAll("[data-remove-work-time]").forEach((el) =>
+    el.addEventListener("click", () => setState({ workTimeRangeCount: Math.max(1, state.workTimeRangeCount - 1) }))
+  );
+  document.querySelector("[data-add-work-schedule]")?.addEventListener("click", () =>
+    setState({ workScheduleCount: state.workScheduleCount + 1 })
+  );
+  document.querySelectorAll("[data-remove-work-schedule]").forEach((el) =>
+    el.addEventListener("click", () => setState({ workScheduleCount: Math.max(1, state.workScheduleCount - 1) }))
+  );
+  document.querySelector("[data-chat-settings-back]")?.addEventListener("click", () =>
+    setState({ chatSettingsOpen: false })
+  );
+  const quickMessageSearch = document.querySelector("[data-quick-message-search]");
+  if (quickMessageSearch) quickMessageSearch.addEventListener("input", () => {
+    const query = quickMessageSearch.value;
+    setState({ quickMessageSearch: query });
+    const nextInput = document.querySelector("[data-quick-message-search]");
+    nextInput?.focus();
+    nextInput?.setSelectionRange(query.length, query.length);
+  });
+  document.querySelectorAll("[data-quick-reply-delete]").forEach((el) => el.addEventListener("click", () => {
+    const index = quickMessageData.replies.findIndex((reply) => reply.id === el.dataset.quickReplyDelete);
+    if (index >= 0) quickMessageData.replies.splice(index, 1);
+    saveQuickMessageData();
+    setState({});
+    showToast("快捷回复已删除");
+  }));
+  const chatSortToggle = document.querySelector("[data-chat-sort-toggle]");
+  if (chatSortToggle) chatSortToggle.addEventListener("click", () => setState({ chatSortOpen: !state.chatSortOpen }));
+  document.querySelectorAll("[data-chat-sort]").forEach((el) =>
+    el.addEventListener("click", () => setState({ chatSort: el.dataset.chatSort, chatSortOpen: false }))
+  );
+  const chatSearchToggle = document.querySelector("[data-chat-search-toggle]");
+  if (chatSearchToggle) chatSearchToggle.addEventListener("click", () => {
+    setState({ chatSearchOpen: !state.chatSearchOpen, chatSearchModeOpen: false, chatSortOpen: false, chatSearchQuery: state.chatSearchOpen ? "" : state.chatSearchQuery });
+    document.querySelector("[data-chat-search-input]")?.focus();
+  });
+  const chatSearchModeToggle = document.querySelector("[data-chat-search-mode-toggle]");
+  if (chatSearchModeToggle) chatSearchModeToggle.addEventListener("click", () => setState({ chatSearchModeOpen: !state.chatSearchModeOpen }));
+  document.querySelectorAll("[data-chat-search-mode]").forEach((el) =>
+    el.addEventListener("click", () => {
+      setState({ chatSearchMode: el.dataset.chatSearchMode, chatSearchModeOpen: false });
+      document.querySelector("[data-chat-search-input]")?.focus();
+    })
+  );
+  const chatSearchInput = document.querySelector("[data-chat-search-input]");
+  if (chatSearchInput) chatSearchInput.addEventListener("input", () => {
+    state.chatSearchQuery = chatSearchInput.value;
+    const conversations = sortConversations(conversationMap[state.chatFilter] || []).filter(matchesConversationSearch);
+    const listHead = document.querySelector(".conv-search-panel");
+    if (!listHead) return;
+    let node = listHead.nextElementSibling;
+    while (node && !node.classList.contains("join-card")) {
+      const next = node.nextElementSibling;
+      node.remove();
+      node = next;
+    }
+    listHead.insertAdjacentHTML("afterend", conversations.length
+      ? conversations.map((item) => renderConversationItem(item)).join("")
+      : `<div class="empty" style="min-height:240px">未找到匹配的对话</div>`);
+    document.querySelectorAll("[data-conversation]").forEach((el) =>
+      el.addEventListener("click", () => setState({ selectedConversation: el.dataset.conversation }))
+    );
+  });
+  const chatSearchClose = document.querySelector("[data-chat-search-close]");
+  if (chatSearchClose) chatSearchClose.addEventListener("click", () => setState({ chatSearchOpen: false, chatSearchModeOpen: false, chatSearchQuery: "" }));
   document.querySelectorAll("[data-conversation]").forEach((el) =>
     el.addEventListener("click", () => setState({ selectedConversation: el.dataset.conversation }))
   );
@@ -3442,9 +3965,60 @@ function bindEvents() {
       setState({ drawer: null });
     });
   }
-  document.querySelectorAll("[data-modal]").forEach((el) => el.addEventListener("click", () => setState({ modal: el.dataset.modal })));
+  document.querySelectorAll("[data-modal]").forEach((el) => el.addEventListener("click", () => {
+    const modalName = el.dataset.modal;
+    if (modalName === "customView") {
+      setState({ modal: modalName, customViewStep: 1, customViewName: "", customViewAccess: "all", customViewFilterRows: 1, customViewFieldOpen: false, customViewManual: false });
+      return;
+    }
+    setState({ modal: modalName });
+  }));
   document.querySelectorAll("[data-drawer]").forEach((el) => el.addEventListener("click", () => setState({ drawer: el.dataset.drawer })));
-  document.querySelectorAll("[data-close-modal]").forEach((el) => el.addEventListener("click", () => setState({ modal: null, knowledgeStep: 1, authStep: 1, importSkillSelected: [] })));
+  document.querySelectorAll("[data-close-modal]").forEach((el) => el.addEventListener("click", () => setState({ modal: null, knowledgeStep: 1, authStep: 1, importSkillSelected: [], customViewStep: 1, customViewName: "", customViewFilterRows: 1, customViewFieldOpen: false, customViewManual: false })));
+  document.querySelectorAll("[data-custom-view-step]").forEach((el) =>
+    el.addEventListener("click", () => {
+      const targetStep = Number(el.dataset.customViewStep);
+      if (targetStep < state.customViewStep) setState({ customViewStep: targetStep, customViewFieldOpen: false });
+    })
+  );
+  const customViewNameInput = document.querySelector("[data-custom-view-name]");
+  if (customViewNameInput) customViewNameInput.addEventListener("input", () => {
+    state.customViewName = customViewNameInput.value.slice(0, 100);
+    const count = document.querySelector("[data-custom-view-name-count]");
+    const next = document.querySelector("[data-custom-view-next]");
+    const canContinue = Boolean(state.customViewName.trim());
+    if (count) count.textContent = `${state.customViewName.length} / 100`;
+    if (next) {
+      next.disabled = !canContinue;
+      next.classList.toggle("disabled", !canContinue);
+    }
+  });
+  document.querySelectorAll("[data-custom-view-access]").forEach((el) =>
+    el.addEventListener("click", () => setState({ customViewAccess: el.dataset.customViewAccess }))
+  );
+  const customViewPrev = document.querySelector("[data-custom-view-prev]");
+  if (customViewPrev) customViewPrev.addEventListener("click", () => setState({ customViewStep: Math.max(1, state.customViewStep - 1), customViewFieldOpen: false }));
+  const customViewNext = document.querySelector("[data-custom-view-next]");
+  if (customViewNext) customViewNext.addEventListener("click", () => {
+    if (state.customViewStep === 1 && !state.customViewName.trim()) {
+      showToast("请先填写视图名称");
+      return;
+    }
+    if (state.customViewStep === 3) {
+      const viewName = state.customViewName.trim();
+      if (customConversationViews.includes(viewName) || conversationFilters.includes(viewName)) {
+        showToast("该对话组名称已存在");
+        return;
+      }
+      customConversationViews.push(viewName);
+      conversationMap[viewName] = [];
+      saveCustomConversationViews(customConversationViews);
+      setState({ modal: null, customViewStep: 1, customViewName: "", customViewFilterRows: 1, customViewFieldOpen: false, customViewManual: false, chatFilter: viewName, selectedConversation: null });
+      showToast(`对话组“${viewName}”已创建`);
+      return;
+    }
+    setState({ customViewStep: state.customViewStep + 1, customViewFieldOpen: false });
+  });
   document.querySelectorAll("[data-close-drawer]").forEach((el) => el.addEventListener("click", () => setState({ drawer: null })));
   document.querySelectorAll("[data-import-skill-select]").forEach((el) =>
     el.addEventListener("change", () => {
@@ -3453,6 +4027,33 @@ function bindEvents() {
       if (el.checked) selected.add(skillId);
       else selected.delete(skillId);
       setState({ importSkillSelected: Array.from(selected) });
+    })
+  );
+  const quickReplyRequired = document.querySelectorAll("[data-quick-reply-required]");
+  if (quickReplyRequired.length) {
+    const updateQuickReplySave = () => {
+      const group = document.getElementById("quickReplyGroup")?.value;
+      const content = document.getElementById("quickReplyContent")?.textContent.trim();
+      const save = document.querySelector(".quick-reply-modal [data-modal-ok]");
+      if (save) save.disabled = !(group && content);
+    };
+    quickReplyRequired.forEach((el) => {
+      el.addEventListener("input", updateQuickReplySave);
+      el.addEventListener("change", updateQuickReplySave);
+    });
+  }
+  const quickGroupName = document.getElementById("quickGroupName");
+  if (quickGroupName) {
+    quickGroupName.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      document.querySelector(".quick-group-modal [data-modal-ok]")?.click();
+    });
+  }
+  document.querySelectorAll("[data-quick-format]").forEach((el) =>
+    el.addEventListener("click", () => {
+      document.getElementById("quickReplyContent")?.focus();
+      document.execCommand(el.dataset.quickFormat, false, el.dataset.formatValue || null);
     })
   );
   const modalOk = document.querySelector("[data-modal-ok]");
