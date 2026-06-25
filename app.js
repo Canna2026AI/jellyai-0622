@@ -33,6 +33,10 @@ const state = {
   customViewManual: false,
   chatSidebarCollapsed: false,
   selectedConversation: null,
+  channelCategory: "全部",
+  contactsSub: "list",
+  settingsSub: "team",
+  teachSub: "guide",
   analyticsTab: "ai_chat",
   analyticsRange: "7",
   analyticsExported: false,
@@ -59,6 +63,7 @@ const state = {
   operationTab: "content",
   groupManageSub: "welcome",
   groupManageTab: "welcome",
+  marketingAccountTab: "accounts",
   materialScope: "personal",
   materialType: "all",
   antiSealTab: "accounts",
@@ -174,6 +179,25 @@ const channels = [
   ["Telegram Bot", "将 Telegram Bot 对话接入聚合对话中", "尚未连接任何账号", "添加账号", "T"],
 ];
 
+const channelCategories = ["全部", "已绑定", "社交媒体", "电商平台", "办公OA", "网站/小程序", "邮件/短信", "海外平台"];
+const channelCategoryMap = {
+  "微信客服(企业微信)": "社交媒体",
+  "企业微信代运营(私聊/群聊)": "社交媒体",
+  "抖音企业号(私信)": "社交媒体",
+  "微信公众号": "社交媒体",
+  "小红书专业号(私信)": "社交媒体",
+  "小红书专业号(评论)": "社交媒体",
+  "快手专业号": "社交媒体",
+  "微信客服(原生)": "社交媒体",
+  "QQ机器人": "社交媒体",
+  "视频号/微信小店": "电商平台",
+  "钉钉机器人": "办公OA",
+  "飞书机器人": "办公OA",
+  "Web页面": "网站/小程序",
+  "WhatsApp Business": "海外平台",
+  "Telegram Bot": "海外平台",
+};
+
 const conversationFilters = [
   "全部对话",
   "人工对话",
@@ -192,7 +216,7 @@ const defaultCustomConversationViews = [
   "网站页面",
 ];
 
-const customViewStorageKey = "jerry-ai-custom-conversation-views";
+const customViewStorageKey = "jelly-ai-custom-conversation-views";
 
 function loadCustomConversationViews() {
   try {
@@ -225,7 +249,7 @@ function escapeHtml(value) {
 
 const customConversationViews = loadCustomConversationViews();
 
-const quickMessageStorageKey = "jerry-ai-quick-messages";
+const quickMessageStorageKey = "jelly-ai-quick-messages";
 
 function loadQuickMessageData() {
   try {
@@ -531,6 +555,129 @@ const marketingRules = [
   { id: "test", name: "测试", enabled: true },
 ];
 
+const tagGroupRows = {
+  customer: [
+    ["客户意向(4)", "可见小组: 全部小组", "<span class=\"mkt-tag-chip\">报价咨询</span><span class=\"mkt-tag-chip\">待跟进</span><span class=\"mkt-tag-chip\">重点客户</span><span class=\"mkt-tag-chip\">已成交</span>", "<button class=\"link-button\" data-modal=\"tagGroupTask\">编辑</button>"],
+    ["物流阶段(3)", "可见小组: 销售一组", "<span class=\"mkt-tag-chip\">已询价</span><span class=\"mkt-tag-chip\">已发货</span><span class=\"mkt-tag-chip\">售后中</span>", "<button class=\"link-button\" data-modal=\"tagGroupTask\">编辑</button>"],
+  ],
+  group: [
+    ["群聊类型(3)", "可见小组: 全部小组", "<span class=\"mkt-tag-chip\">报价群</span><span class=\"mkt-tag-chip\">售后群</span><span class=\"mkt-tag-chip\">渠道群</span>", "<button class=\"link-button\" data-modal=\"tagGroupTask\">编辑</button>"],
+  ],
+};
+
+const keywordTagRows = {
+  rules: [
+    ["报价关键词打标", "模糊匹配", "报价 / 运费 / 价格", "私聊+群聊", "<span class=\"mkt-tag-chip\">报价咨询</span>", "<span class=\"mkt-tag-chip\">待跟进</span>", "<button class=\"link-button\" data-modal=\"keywordTagTask\">编辑</button>"],
+    ["售后关键词打标", "精准匹配", "丢件 / 破损 / 延误", "私聊", "<span class=\"mkt-tag-chip\">售后中</span>", "<span class=\"mkt-tag-chip\">高优先级</span>", "<button class=\"link-button\" data-modal=\"keywordTagTask\">编辑</button>"],
+  ],
+  records: [
+    ["报价关键词打标", "私聊", "2026-06-20 17:40", "Canna郑", "<span class=\"mkt-tag-chip\">报价咨询</span>", "<span class=\"mkt-tag-chip\">待跟进</span>", "<button class=\"link-button\" data-demo-action=\"查看关键词标签记录\">详情</button>"],
+    ["售后关键词打标", "群聊", "2026-06-20 15:12", "欧诚国际物流群", "<span class=\"mkt-tag-chip\">售后中</span>", "<span class=\"mkt-tag-chip\">高优先级</span>", "<button class=\"link-button\" data-demo-action=\"查看关键词标签记录\">详情</button>"],
+  ],
+};
+
+const blastTaskRows = {
+  tasks: [
+    ["欧洲物流报价唤醒", "文本+图片", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag blue\">进行中</span>", "<button class=\"link-button\" data-modal=\"blastTask\">编辑</button>"],
+    ["618客户复购提醒", "文本话术", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag orange\">待执行</span>", "<button class=\"link-button\" data-modal=\"blastTask\">编辑</button>"],
+  ],
+  cycle: [
+    ["每周报价更新", "文本+素材", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag green\">已开启</span>", "3", "<button class=\"link-button\" data-modal=\"blastTask\">编辑</button>"],
+  ],
+  moments: [
+    ["欧洲海运限时促销", "图片+文案", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag orange\">待发送</span>", "<button class=\"link-button\" data-modal=\"blastTask\">编辑</button>"],
+  ],
+};
+
+const autoFriendRows = {
+  excel: [
+    ["6月展会客户导入", "<span class=\"tag blue\">进行中</span>", "Canna", "8018", "<span class=\"mkt-tag-chip\">展会客户</span>", "您好，我是Jelly AI客服，方便加您沟通物流报价吗？", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+    ["跨境卖家名单", "<span class=\"tag orange\">待执行</span>", "Canna", "8018", "<span class=\"mkt-tag-chip\">报价咨询</span>", "您好，看到您关注欧洲物流，方便交流吗？", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+  ],
+  group: [
+    ["报价群成员添加", "<span class=\"tag blue\">进行中</span>", "欧诚国际物流群", "18", "Canna", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+    ["渠道交流群转化", "<span class=\"tag orange\">待执行</span>", "欧洲海运交流群", "42", "Canna", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+  ],
+  card: [
+    ["销售名片二次触达", "<span class=\"tag orange\">待执行</span>", "Kelvin分享名片", "Canna", "您好，收到您的名片，想了解物流报价可以直接发我。", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+  ],
+  api: [
+    ["官网表单线索", "<span class=\"tag green\">已开启</span>", "Webhook", "Canna", "<span class=\"tag green\">正常</span>", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+    ["CRM新线索同步", "<span class=\"tag orange\">暂停中</span>", "CRM API", "Canna", "<span class=\"tag orange\">待配置</span>", "<button class=\"link-button\" data-modal=\"autoFriendTask\">编辑</button>"],
+  ],
+  lost: [
+    ["Canna郑", "单删客户", "Canna", "2026-06-19 22:45", "<span class=\"tag orange\">待处理</span>", "<button class=\"link-button\" data-demo-action=\"查看流失客户\">详情</button>"],
+    ["欧诚物流-王总", "长时未互动", "Canna", "2026-06-11 09:18", "<span class=\"tag blue\">已生成任务</span>", "<button class=\"link-button\" data-demo-action=\"查看流失客户\">详情</button>"],
+  ],
+  blacklist: [
+    ["测试黑名单客户", "138****9001", "手动加入", "2026-06-20 11:20", "频繁骚扰", "<button class=\"link-button\" data-modal=\"blacklistTask\">编辑</button>"],
+  ],
+};
+
+const operationRows = {
+  keywordReply: [
+    ["物流报价回复", "报价 / 运费", "模糊匹配", "包含任一关键词", "私聊+群聊", "报价说明话术", "<span class=\"switch on\" data-switch></span>", "<button class=\"link-button\" data-modal=\"keywordReplyTask\">编辑</button>"],
+    ["转人工提醒", "人工 / 客服", "精准匹配", "命中全部", "私聊", "转人工话术", "<span class=\"switch on\" data-switch></span>", "<button class=\"link-button\" data-modal=\"keywordReplyTask\">编辑</button>"],
+  ],
+  keywordReplyRecords: [
+    ["物流报价回复", "Canna郑", "报价", "2026-06-20 17:40", "<span class=\"tag green\">已回复</span>", "<button class=\"link-button\" data-demo-action=\"查看触发记录\">详情</button>"],
+  ],
+  keywordGroup: [
+    ["欧洲物流关键词拉群", "欧洲 / 报价", "包含任一关键词", "私聊", "欧洲报价交流群", "<span class=\"switch on\" data-switch></span>", "<button class=\"link-button\" data-modal=\"keywordGroupTask\">编辑</button>"],
+  ],
+  keywordGroupRecords: [
+    ["欧洲物流关键词拉群", "私聊", "Canna郑", "报价", "2026-06-20 17:40", "<button class=\"link-button\" data-demo-action=\"查看拉群记录\">详情</button>"],
+  ],
+  newCustomer: [
+    ["新客户3天转化", "欢迎语+报价引导", "Canna", "新添加好友", "<span class=\"tag green\">已开启</span>", "<button class=\"link-button\" data-modal=\"sopTask\">编辑</button>"],
+  ],
+  welcome: [
+    ["默认欢迎语", "您好，我是Jelly AI客服，可以帮您查询物流方案。", "Canna", "<span class=\"tag green\">已开启</span>", "<button class=\"link-button\" data-modal=\"sopTask\">编辑</button>"],
+  ],
+  records: [
+    ["2026-06-20 17:40", "Canna郑", "通过好友", "Canna", "<span class=\"tag green\">执行成功</span>", "<button class=\"link-button\" data-demo-action=\"查看SOP日志\">详情</button>"],
+  ],
+  privateSop: [
+    ["沉默客户唤醒", "报价后24小时未回复自动跟进", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag green\">已开启</span>", "报价咨询客户", "<button class=\"link-button\" data-modal=\"sopTask\">编辑</button>"],
+  ],
+  groupSop: [
+    ["群内问题未答提醒", "群内3分钟无人回复时AI补充说明", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag blue\">进行中</span>", "欧洲报价交流群", "<button class=\"link-button\" data-modal=\"sopTask\">编辑</button>"],
+  ],
+  momentsSop: [
+    ["朋友圈点赞跟进", "客户点赞促销内容后私聊提醒", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag orange\">待执行</span>", "近期互动客户", "<button class=\"link-button\" data-modal=\"sopTask\">编辑</button>"],
+  ],
+  tagSop: [
+    ["重点客户复购SOP", "打上重点客户标签后7天跟进", "<span class=\"tag green\">Canna 在线</span>", "<span class=\"tag green\">已开启</span>", "重点客户", "<button class=\"link-button\" data-modal=\"sopTask\">编辑</button>"],
+  ],
+  batchGroup: [
+    ["报价客户批量入群", "报价咨询客户", "欧洲报价交流群", "Canna", "<span class=\"tag orange\">待执行</span>", "<button class=\"link-button\" data-modal=\"keywordGroupTask\">编辑</button>"],
+  ],
+  tagGroup: [
+    ["重点客户标签拉群", "重点客户", "核心客户服务群", "Canna", "<span class=\"tag green\">已开启</span>", "<button class=\"link-button\" data-modal=\"keywordGroupTask\">编辑</button>"],
+  ],
+};
+
+const groupManageRows = {
+  welcome: [
+    ["默认入群欢迎语", "欢迎加入群聊，请发送目的国+重量获取报价。", "发送", "欧洲报价交流群", "<span class=\"tag green\">已开启</span>", "<button class=\"link-button\" data-modal=\"groupManageTask\">编辑</button>"],
+  ],
+  robot: [
+    ["广告关键词踢人", "命中广告、刷屏、无关链接", "欧洲报价交流群", "<span class=\"tag green\">已开启</span>", "<button class=\"link-button\" data-modal=\"groupManageTask\">编辑</button>"],
+  ],
+  invite: [
+    ["客户邀请自动通过", "客户邀请托管账号入群时自动接受", "全部客户群", "<span class=\"tag orange\">待配置</span>", "<button class=\"link-button\" data-modal=\"groupManageTask\">编辑</button>"],
+  ],
+  transfer: [
+    ["报价群同步通知", "将报价群重要消息同步到运营群", "欧洲报价交流群", "<span class=\"tag green\">已开启</span>", "<button class=\"link-button\" data-modal=\"groupManageTask\">编辑</button>"],
+  ],
+};
+
+const materialRows = [
+  ["欧洲海运报价说明", "按重量、体积、国家、地址类型计算报价", "文本话术", "2026-06-20 18:22", "<button class=\"link-button\" data-modal=\"materialTask\">编辑</button>"],
+  ["物流时效示意图", "普船、快船、卡派时效对比图", "图片", "2026-06-19 16:10", "<button class=\"link-button\" data-modal=\"materialTask\">编辑</button>"],
+  ["售后处理FAQ", "丢件、破损、延误场景处理话术", "文件", "2026-06-18 09:30", "<button class=\"link-button\" data-modal=\"materialTask\">编辑</button>"],
+];
+
 const flowTemplates = [
   {
     id: "contacts-mail",
@@ -652,12 +799,24 @@ function render() {
     ${renderDrawer()}
   `;
   bindEvents();
+  keepActiveSidebarItemVisible();
+}
+
+function keepActiveSidebarItemVisible() {
+  const nav = document.querySelector(".nav");
+  const active = document.querySelector(".marketing-nav-child.active") || document.querySelector(".nav-item.active");
+  if (!nav || !active) return;
+  const navTop = nav.getBoundingClientRect().top;
+  const navBottom = document.querySelector(".nav-bottom")?.getBoundingClientRect().top || nav.getBoundingClientRect().bottom;
+  const activeRect = active.getBoundingClientRect();
+  if (activeRect.bottom > navBottom - 10) nav.scrollTop += activeRect.bottom - navBottom + 14;
+  if (activeRect.top < navTop + 10) nav.scrollTop -= navTop + 10 - activeRect.top;
 }
 
 function renderSidebar() {
   return `
     <aside class="sidebar ${state.sidebarCollapsed ? "collapsed" : ""}">
-      <div class="brand"><span class="brand-mark"></span><span>Jerry AI</span></div>
+      <div class="brand"><span class="brand-mark"></span><span>Jelly AI</span></div>
       <div class="nav">
         ${menu
           .map(
@@ -727,8 +886,14 @@ function renderPage() {
       return renderSkillEditPage();
     case "marketing":
       return renderMarketing();
+    case "contacts":
+      return renderContacts();
     case "analytics":
       return renderAnalytics();
+    case "teach":
+      return renderTeach();
+    case "settings":
+      return renderSystemSettings();
     default:
       return renderPlaceholder();
   }
@@ -1376,15 +1541,33 @@ function renderChatPreview() {
 }
 
 function renderChannels() {
+  const filteredChannels = channels.filter(([name, , status]) => {
+    if (state.channelCategory === "全部") return true;
+    if (state.channelCategory === "已绑定") return status.includes("已连接");
+    return channelCategoryMap[name] === state.channelCategory;
+  });
   return `
-    <section class="content">
-      <h1 class="page-title">对话渠道</h1>
-      <div class="subtle">管理您的对话渠道并发现新对话渠道以帮助您获得更多客户。</div>
-      <div class="filters">${["全部", "已绑定", "社交媒体", "电商平台", "办公OA", "网站/小程序", "邮件/短信", "海外平台"].map((f, i) => `<button class="button ${i === 0 ? "primary" : ""}">${f}</button>`).join("")}</div>
-      <input class="input" placeholder="搜索 对话渠道" style="width:260px; margin-bottom:18px" />
-      <div class="section-title">已绑定</div>
-      <div class="channel-grid">
-        ${channels
+    <section class="module-layout channel-library">
+      <aside class="subnav">
+        <div class="subnav-title">对话渠道</div>
+        ${channelCategories
+          .map((name) => `<div class="subnav-item ${state.channelCategory === name ? "active" : ""}" data-channel-category="${name}"><span class="subnav-icon">▣</span><span>${name}</span></div>`)
+          .join("")}
+      </aside>
+      <main class="module-content channel-library-main">
+        <div class="channel-library-head">
+          <div>
+            <h1 class="page-title">对话渠道</h1>
+            <div class="subtle">管理您的对话渠道并发现新对话渠道，帮助您获得更多客户。</div>
+          </div>
+          <input class="input search-input" placeholder="搜索 对话渠道" />
+        </div>
+        <div class="channel-category-strip">
+          ${channelCategories.map((name) => `<button class="${state.channelCategory === name ? "active" : ""}" data-channel-category="${name}">${name}</button>`).join("")}
+        </div>
+        <div class="section-title">${state.channelCategory}</div>
+        <div class="channel-grid">
+          ${filteredChannels
           .map(
             ([name, desc, status, action, ico]) => `<div class="card channel-card">
               <div><div class="card-title">${name}</div><div class="subtle">${desc}</div><div style="margin-top:20px; display:flex; justify-content:space-between"><span class="subtle">${status}</span><button class="button small ${action === "管理" ? "" : ""}" data-page="${name.includes("企业微信代运营") ? "wechat" : ""}">${action}</button></div></div>
@@ -1392,7 +1575,8 @@ function renderChannels() {
             </div>`
           )
           .join("")}
-      </div>
+        </div>
+      </main>
     </section>`;
 }
 
@@ -1637,7 +1821,7 @@ function renderRobotConsole() {
         <div class="form-row"><div class="label">选择托管账号</div><select class="select" style="width:100%"><option>王丽 / ZhuLi01</option></select></div>
         <div class="form-row"><div class="label">目标类型</div><select class="select" style="width:100%"><option>群聊</option><option>联系人</option></select></div>
         <div class="form-row"><div class="label">目标名称</div><input class="input" style="width:100%" value="欧诚国际物流&集简云对接群"></div>
-        <div class="form-row"><div class="label">消息内容</div><textarea class="textarea" style="width:100%">您好，Jerry AI 已接管企业微信客服，后续物流问题可直接在群里咨询。</textarea></div>
+        <div class="form-row"><div class="label">消息内容</div><textarea class="textarea" style="width:100%">您好，Jelly AI 已接管企业微信客服，后续物流问题可直接在群里咨询。</textarea></div>
         <div class="action-grid">${["发送文本", "发送图片", "发送文件", "创建群聊", "拉人进群", "修改群名称", "发送群公告"].map((x) => `<button class="button" data-console-action="${x}">${x}</button>`).join("")}</div>
       </div>
       <div class="card">
@@ -1828,7 +2012,7 @@ function renderWorkHoursSettings() {
 
     <footer class="work-hours-footer">
       <button class="button" type="button" data-chat-settings-back>返回</button>
-      <button class="button primary" type="button" data-demo-action="工作时间设置已保存" ${disabled}>确认</button>
+      <button class="button primary" type="button" data-demo-action="工作时间设置已保存">确认</button>
     </footer>
   </section>`;
 }
@@ -1989,7 +2173,7 @@ function renderConversationGuide() {
     指给我的: "您还没有待处理的指派对话，了解如何设置人工服务",
   }[state.chatFilter] || "选择左侧会话查看消息，或先了解聚合对话配置";
   return `<div class="chat-guide">
-    <div class="guide-logo"><span class="brand-mark"></span><b>Jerry AI</b></div>
+    <div class="guide-logo"><span class="brand-mark"></span><b>Jelly AI</b></div>
     <div class="subtle">${titleHint} <span style="color:var(--blue)">了解更多</span></div>
     <div class="guide-card-grid">
       ${cards
@@ -2613,12 +2797,15 @@ function renderTagPageHead(title, tip) {
 }
 
 function renderCustomTags() {
+  const rows = tagGroupRows[state.marketingTagTab] || tagGroupRows.customer;
+  const label = state.marketingTagTab === "group" ? "自定义群聊标签" : "自定义客户标签";
+  const tagCount = rows.reduce((total, row) => total + (row[2].match(/mkt-tag-chip/g) || []).length, 0);
   return `${renderTagPageHead("自定义标签", "仅可应用于系统内部，对当前小组生效的标签，可在侧边栏、客户分组、关键词打标签中快捷使用")}
     ${renderMktTabs([["customer", "自定义客户标签"], ["group", "自定义群聊标签"]], state.marketingTagTab, "marketing-tag-tab")}
-    ${renderMktSearchRow(["请输入自定义客户标签", "请输入自定义客户标签组", "reset"])}
+    ${renderMktSearchRow([`请输入${label}`, `请输入${label}组`, "reset"])}
     <div class="mkt-section-card">
-      <div class="mkt-section-head"><b>共 0 个标签组，0 个标签</b><button class="button primary" data-demo-action="新建自定义标签组">新建自定义标签组</button></div>
-      ${renderMktEmpty()}
+      <div class="mkt-section-head"><b>共 ${rows.length} 个标签组，${tagCount} 个标签</b><button class="button primary" data-modal="tagGroupTask">新建自定义标签组</button></div>
+      ${renderMktTable(["标签组", "可见范围", "标签", "操作"], rows)}
     </div>`;
 }
 
@@ -2642,10 +2829,10 @@ function renderKeywordTags() {
     ${renderMktTabs([["rules", "关键词标签规则"], ["records", "关键词标签记录"]], state.keywordTagTab, "keyword-tag-tab")}
     ${
       rule
-        ? `${renderMktSearchRow(["请输入规则名称", "请输入关键词", "select:请选择关键词类型", "select:请选择生效主体", "select:请选择企微标签", "select:请选择自定义标签", "reset"], `<button class="button primary" data-demo-action="添加关键词标签">添加关键词标签</button>`)}
-          ${renderMktTable(["关键词标签规则名称", "关键词类型", "关键词", "生效主体", "企微标签", "自定义标签", "操作"])}`
+        ? `${renderMktSearchRow(["请输入规则名称", "请输入关键词", "select:请选择关键词类型", "select:请选择生效主体", "select:请选择企微标签", "select:请选择自定义标签", "reset"], `<button class="button primary" data-modal="keywordTagTask">添加关键词标签</button>`)}
+          ${renderMktTable(["关键词标签规则名称", "关键词类型", "关键词", "生效主体", "企微标签", "自定义标签", "操作"], keywordTagRows.rules)}`
         : `${renderMktSearchRow(["select:请选择规则名称", "select:请选择生效主体", "请输入客户名称", "date:触发时间 起始日期 至 结束日期", "reset"], `<button class="button primary" data-demo-action="导出关键词标签记录">导 出</button>`)}
-          ${renderMktTable(["关键词标签规则名称", "生效主体", "时间", "客户名称/备注名", "企微标签", "自定义标签", "操作"])}`
+          ${renderMktTable(["关键词标签规则名称", "生效主体", "时间", "客户名称/备注名", "企微标签", "自定义标签", "操作"], keywordTagRows.records)}`
     }`;
 }
 
@@ -2674,11 +2861,11 @@ function renderBlastMain() {
       <span></span>
       <button class="button" data-demo-action="批量操作">▦</button>
       ${state.messageBlastTab === "tasks" ? `<button class="button" data-demo-action="批量取消">批量取消</button>` : ""}
-      <button class="button primary" data-demo-action="新建群发任务">新建任务</button>
+      <button class="button primary" data-modal="blastTask">新建任务</button>
     </div>
     ${renderMktSearchRow(["请输入任务名称", "请输入任务id", "select:请选择创建者", "select:请选择托管账号", "reset"], `<button class="link-button" data-demo-action="展开更多筛选">展开⌄</button>`)}
     <div class="mkt-refresh">↻刷新${state.messageBlastTab === "cycle" ? "列表" : "进度"}</div>
-    ${renderMktTable(columns, [], state.messageBlastTab === "tasks")}`;
+    ${renderMktTable(columns, isMoments ? blastTaskRows.moments : blastTaskRows[state.messageBlastTab], state.messageBlastTab === "tasks")}`;
 }
 
 function renderBlastSettings(title) {
@@ -2708,15 +2895,54 @@ function renderAutoFriend() {
 function renderAutoFriendMain() {
   const titleMap = { excel: "Excel加好友", group: "群聊加好友", card: "名片加好友", api: "API加好友", lost: "客户流失", blacklist: "系统黑名单" };
   if (state.autoFriendSub !== "excel") {
-    return `<div class="mkt-page-title">${titleMap[state.autoFriendSub]}</div>${renderMktTip("系统将按设定时间间隔逐个执行任务，当前为演示页面。", "●")}${renderMktSearchRow(["请选择任务状态", "reset"], `<button class="button primary" data-demo-action="添加${titleMap[state.autoFriendSub]}任务">添加任务</button>`)}${renderMktTable(["任务名称", "任务状态", "客户/群", "添加好友账号", "操作"], [])}`;
+    const config = {
+      group: {
+        tip: "从群聊成员中筛选目标客户并逐个发送好友申请，支持设置通过后标签和打招呼内容。",
+        filters: ["请输入任务名称", "请输入群聊名称", "select:请选择任务状态", "reset"],
+        headers: ["任务名称", "任务状态", "群聊名称", "待加人数", "加好友账号", "操作"],
+        action: "添加群聊加好友任务",
+      },
+      card: {
+        tip: "通过客户名片识别目标客户并执行加好友任务，适合销售名片流转场景。",
+        filters: ["请输入任务名称", "请输入客户名称", "select:请选择任务状态", "reset"],
+        headers: ["任务名称", "任务状态", "名片来源", "加好友账号", "打招呼", "操作"],
+        action: "添加名片加好友任务",
+      },
+      api: {
+        tip: "通过 API 写入客户手机号或微信号，由系统按频率自动发送好友申请。",
+        filters: ["请输入任务名称", "select:请选择任务状态", "select:请选择API来源", "reset"],
+        headers: ["任务名称", "任务状态", "API来源", "加好友账号", "接口状态", "操作"],
+        action: "添加API加好友任务",
+      },
+      lost: {
+        tip: "识别已删除或长时间未互动客户，按规则生成二次触达任务。",
+        filters: ["请输入客户名称", "select:流失类型", "select:所属托管账号", "reset"],
+        headers: ["客户名称", "流失类型", "所属账号", "最近互动", "处理状态", "操作"],
+        action: "导出客户流失",
+      },
+      blacklist: {
+        tip: "被加入系统黑名单的客户不会被自动加好友、拉群或群发触达。",
+        filters: ["请输入客户名称", "select:黑名单来源", "reset"],
+        headers: ["客户名称", "联系方式", "来源", "加入时间", "原因", "操作"],
+        action: "添加黑名单",
+      },
+    }[state.autoFriendSub];
+    const actionButton = state.autoFriendSub === "lost"
+      ? `<button class="button primary" data-demo-action="${config.action}">导出</button>`
+      : `<button class="button primary" data-modal="${state.autoFriendSub === "blacklist" ? "blacklistTask" : "autoFriendTask"}">${state.autoFriendSub === "blacklist" ? "添加黑名单" : "添加任务"}</button>`;
+    return `<div class="mkt-page-title">${titleMap[state.autoFriendSub]}</div>
+      ${renderMktTip(config.tip, "●")}
+      <div class="mkt-section-line"><b>▣ ${titleMap[state.autoFriendSub]}列表</b><div><button class="button" data-demo-action="批量开始任务">批量开始任务</button><button class="button" data-demo-action="导出">导出</button>${actionButton}</div></div>
+      ${renderMktSearchRow(config.filters)}
+      ${renderMktTable(config.headers, autoFriendRows[state.autoFriendSub], state.autoFriendSub !== "lost")}`;
   }
-  const metrics = [["导入数据", "0"], ["待发送总数", "0"], ["待通过总数", "0"], ["已添加总数", "0"], ["失败总数", "0"], ["总添加成功率", "0%"], ["首次加好友成功率", "0%"]];
+  const metrics = [["导入数据", "2"], ["待发送总数", "60"], ["待通过总数", "18"], ["已添加总数", "31"], ["失败总数", "11"], ["总添加成功率", "52%"], ["首次加好友成功率", "43%"]];
   return `<div class="mkt-page-title">Excel加好友</div>
     ${renderMktTip("系统将按加好友时间间隔逐个发送请求。手动任务仅在每日09:00-21:00发送好友申请，每个托管账号发送好友申请的间隔为600-900秒，可在加好友设置中修改 修改加好友设置", "●")}
     <div class="mkt-stat-row">${metrics.map(([label, value]) => `<div><span>${label}</span><b>${value}</b></div>`).join("")}</div>
-    <div class="mkt-section-line"><b>▣ 任务列表</b><div><button class="button" data-demo-action="批量开始任务">批量开始任务 ⌄</button><button class="button" data-demo-action="导出任务">导出</button><button class="button primary" data-demo-action="添加任务">添加任务</button></div></div>
+    <div class="mkt-section-line"><b>▣ 任务列表</b><div><button class="button" data-demo-action="批量开始任务">批量开始任务 ⌄</button><button class="button" data-demo-action="导出任务">导出</button><button class="button primary" data-modal="autoFriendTask">添加任务</button></div></div>
     ${renderMktSearchRow(["select:请选择任务状态", "reset"])}
-    ${renderMktTable(["任务名称", "任务状态", "加好友账号", "加好友账号ID", "加好友后打标签", "打招呼", "操作"], [], true)}`;
+    ${renderMktTable(["任务名称", "任务状态", "加好友账号", "加好友账号ID", "加好友后打标签", "打招呼", "操作"], autoFriendRows.excel, true)}`;
 }
 
 function renderMarketingOperation() {
@@ -2736,23 +2962,75 @@ function renderMarketingOperation() {
 }
 
 function renderOperationMain() {
-  if (state.operationSub !== "keywordReply") {
-    const label = {
-      keywordGroup: "关键词拉群",
-      newCustomer: "新客户SOP",
-      privateSop: "私聊SOP",
-      groupSop: "群聊SOP",
-      momentsSop: "朋友圈SOP",
-      tagSop: "标签SOP",
-      template: "SOP模板",
-      batchGroup: "批量拉群",
-      tagGroup: "标签拉群",
-    }[state.operationSub];
-    return `<div class="mkt-page-title">${label}</div>${renderMktSearchRow(["请输入任务名称", "select:请选择状态", "reset"], `<button class="button primary" data-demo-action="添加${label}">添加${label}</button>`)}${renderMktTable(["任务名称", "触发条件", "生效范围", "状态", "操作"], [])}`;
-  }
+  if (state.operationSub === "keywordGroup") return renderKeywordGroupPage();
+  if (state.operationSub === "newCustomer") return renderNewCustomerSopPage();
+  if (state.operationSub === "template") return renderSopTemplatePage();
+  if (["privateSop", "groupSop", "momentsSop", "tagSop"].includes(state.operationSub)) return renderSopTaskPage();
+  if (["batchGroup", "tagGroup"].includes(state.operationSub)) return renderBatchGroupPage();
   const tab = state.operationTab;
   return `<div class="mkt-page-title with-tabs"><span>关键词回复</span>${renderMktTabs([["content", "关键词回复"], ["advanced", "高级设置"]], tab === "advanced" ? "advanced" : "content", "operation-top-tab")}</div>
     ${tab === "advanced" ? renderOperationAdvanced() : renderKeywordReplyList()}`;
+}
+
+function renderKeywordGroupPage() {
+  const record = state.operationTab === "records";
+  return `<div class="mkt-page-title with-tabs"><span>关键词拉群</span>${renderMktTabs([["content", "关键词拉群"], ["records", "触发记录"]], state.operationTab === "records" ? "records" : "content", "operation-tab")}</div>
+    ${record
+      ? `${renderMktSearchRow(["select:请选择规则名称", "select:请选择生效主体", "请输入客户名称", "date:触发时间 起始日期 至 结束日期", "reset"], `<button class="button primary" data-demo-action="导出关键词拉群记录">导出</button>`)}${renderMktTable(["规则名称", "生效主体", "客户名称", "触发关键词", "触发时间", "操作"], operationRows.keywordGroupRecords)}`
+      : `${renderMktSearchRow(["请输入规则名称", "请输入关键词", "select:请选择生效主体", "select:请选择群聊", "reset"], `<button class="button primary" data-modal="keywordGroupTask">添加关键词拉群</button>`)}${renderMktTable(["任务名称", "触发关键词", "匹配规则", "生效范围", "目标群聊", "自动拉群开关", "操作"], operationRows.keywordGroup, true)}`}`;
+}
+
+function renderNewCustomerSopPage() {
+  const tabs = [["content", "新客户SOP"], ["settings", "拉群设置"], ["welcome", "欢迎语设置"], ["records", "操作日志"]];
+  if (state.operationTab === "settings") {
+    return `<div class="mkt-page-title with-tabs"><span>新客户SOP</span>${renderMktTabs(tabs, "settings", "operation-tab")}</div>
+      <div class="mkt-settings-card"><div class="mkt-settings-head"><b>拉群设置</b><button class="button primary" data-demo-action="保存拉群设置">保存</button></div>
+      <div class="mkt-config-block"><h3>自动拉群</h3><p><label><input type="checkbox" checked> 客户通过好友验证后自动邀请入群</label></p><p><b>默认目标群：</b><button class="mkt-select">请选择群聊 <span>⌄</span></button></p></div></div>`;
+  }
+  if (state.operationTab === "welcome") {
+    return `<div class="mkt-page-title with-tabs"><span>新客户SOP</span>${renderMktTabs(tabs, "welcome", "operation-tab")}</div>
+      <div class="mkt-section-line"><b>欢迎语设置</b><button class="button primary" data-modal="sopTask">新建欢迎语</button></div>
+      ${renderMktTable(["欢迎语名称", "发送内容", "生效账号", "状态", "操作"], operationRows.welcome)}`;
+  }
+  if (state.operationTab === "records") {
+    return `<div class="mkt-page-title with-tabs"><span>新客户SOP</span>${renderMktTabs(tabs, "records", "operation-tab")}</div>
+      ${renderMktSearchRow(["请输入客户名称", "select:请选择托管账号", "date:开始日期 至 结束日期", "reset"])}
+      ${renderMktTable(["时间", "客户名称", "触发动作", "托管账号", "执行状态", "操作"], operationRows.records)}`;
+  }
+  return `<div class="mkt-page-title with-tabs"><span>新客户SOP</span>${renderMktTabs(tabs, "content", "operation-tab")}</div>
+    <div class="mkt-action-strip"><span></span><button class="button" data-demo-action="批量开始SOP">批量开始</button><button class="button primary" data-modal="sopTask">新建应答SOP</button></div>
+    ${renderMktSearchRow(["请输入任务名称", "select:请选择状态", "select:请选择托管账号", "reset"])}
+    ${renderMktTable(["任务名称", "发送内容", "托管账号", "生效客户", "状态", "操作"], operationRows.newCustomer, true)}`;
+}
+
+function renderSopTaskPage() {
+  const titleMap = { privateSop: "私聊SOP", groupSop: "群聊SOP", momentsSop: "朋友圈SOP", tagSop: "标签SOP" };
+  const title = titleMap[state.operationSub];
+  const settingLabel = state.operationSub === "privateSop" ? "群发设置" : "高级设置";
+  if (state.operationTab === "advanced") {
+    return `<div class="mkt-page-title with-tabs"><span>${title}</span>${renderMktTabs([["content", title], ["advanced", settingLabel]], "advanced", "operation-tab")}</div>
+      <div class="mkt-settings-card"><div class="mkt-settings-head"><b>${settingLabel}</b><button class="button primary" data-demo-action="编辑${settingLabel}">编辑</button></div>
+      <div class="mkt-config-block"><h3>发送间隔</h3><p><b>* 每条消息发送间隔：</b><input class="input tiny-num" value="5" disabled> - <input class="input tiny-num" value="10" disabled> 秒</p></div>
+      <div class="mkt-config-block"><h3>可发送时间</h3><p><b>* 发送时间：</b> 全天发送</p></div></div>`;
+  }
+  return `<div class="mkt-page-title with-tabs"><span>${title}</span>${renderMktTabs([["content", title], ["advanced", settingLabel]], "content", "operation-tab")}</div>
+    <div class="mkt-section-line"><b>▣ ${title}列表</b><button class="button primary" data-modal="sopTask">新建SOP</button></div>
+    ${renderMktSearchRow(["请输入任务名称", "select:请选择托管账号", "select:请选择状态", "reset"])}
+    ${renderMktTable(["任务名称", "发送内容", "托管账号状态", "任务状态", "发送对象", "操作"], operationRows[state.operationSub], true)}`;
+}
+
+function renderSopTemplatePage() {
+  const cards = ["加好友后3天转化SOP", "物流报价跟进SOP", "沉默客户唤醒SOP", "入群后欢迎SOP"];
+  return `<div class="mkt-page-title">SOP模板</div>
+    <div class="mkt-doc-grid">${cards.map((title) => `<div class="mini-card"><b>${title}</b><p class="subtle">可复制为私聊、群聊或标签SOP任务。</p><button class="button primary small" data-demo-action="使用${title}">使用模板</button></div>`).join("")}</div>`;
+}
+
+function renderBatchGroupPage() {
+  const isTag = state.operationSub === "tagGroup";
+  return `<div class="mkt-page-title">${isTag ? "标签拉群" : "批量拉群"}</div>
+    <div class="mkt-section-line"><b>${isTag ? "标签拉群任务" : "批量拉群任务"}</b><button class="button primary" data-modal="keywordGroupTask">${isTag ? "新建标签拉群" : "新建任务"}</button></div>
+    ${renderMktSearchRow(["请输入任务名称", isTag ? "select:请选择客户标签" : "select:请选择客户", "select:请选择群聊", "reset"])}
+    ${renderMktTable(["任务名称", isTag ? "客户标签" : "选择客户", "目标群聊", "托管账号", "任务状态", "操作"], operationRows[state.operationSub], true)}`;
 }
 
 function renderKeywordReplyList() {
@@ -2762,11 +3040,13 @@ function renderKeywordReplyList() {
       <button class="button" data-demo-action="批量打运营标签">批量打运营标签 ⌄</button>
       <button class="button" data-demo-action="批量开始任务">批量开始任务 ⌄</button>
       <button class="button" data-demo-action="批量删除">批量删除</button>
-      <button class="button" data-demo-action="批量添加">批量添加</button>
-      <button class="button primary" data-demo-action="添加关键词回复">添加关键词回复</button>
+      <button class="button" data-modal="keywordReplyTask">批量添加</button>
+      <button class="button primary" data-modal="keywordReplyTask">添加关键词回复</button>
     </div>
     ${renderMktSearchRow(["请输入任务名...", "请输入关键词", "select:请选择关键词类型", "select:请选择匹配规则", "select:请选择生效范围", "select:请选择运营标签", "reset"])}
-    ${renderMktTable(["任务名称", "触发关键字", "关键词类型", "匹配规则", "生效范围", "回复素材", "自动回复开", "操作"], [], true)}`;
+    ${state.operationTab === "records"
+      ? renderMktTable(["规则名称", "客户名称", "触发关键词", "触发时间", "状态", "操作"], operationRows.keywordReplyRecords)
+      : renderMktTable(["任务名称", "触发关键字", "关键词类型", "匹配规则", "生效范围", "回复素材", "自动回复开", "操作"], operationRows.keywordReply, true)}`;
 }
 
 function renderOperationAdvanced() {
@@ -2790,17 +3070,54 @@ function renderMarketingGroups() {
 function renderGroupManageMain() {
   const title = { welcome: "入群欢迎语", robot: "自动踢人", invite: "接受群邀请", transfer: "多群转播" }[state.groupManageSub];
   const headers = state.groupManageSub === "welcome" ? ["任务名称", "入群欢迎语", "发送外部客户名片", "生效群聊", "状态", "操作"] : ["任务名称", "规则内容", "生效群聊", "状态", "操作"];
+  if (state.groupManageTab === "advanced") {
+    const tips = {
+      welcome: "欢迎语发送频率、成员入群识别和外部客户名片发送配置。",
+      robot: "自动踢人用于按关键词、群成员身份和黑名单规则清理群成员。",
+      invite: "接受群邀请用于控制托管账号是否自动同意客户邀请入群。",
+      transfer: "多群转播用于把一个群的消息同步转发到多个目标群。",
+    };
+    return `<div class="mkt-page-title with-tabs"><span>${title}</span>${renderMktTabs([["welcome", title], ["advanced", "高级配置"]], "advanced", "group-manage-tab")}</div>
+      <div class="mkt-settings-card">
+        <div class="mkt-settings-head"><b>高级配置</b><button class="button primary" data-demo-action="保存${title}高级配置">保存</button></div>
+        <div class="mkt-soft-note purple">● ${tips[state.groupManageSub]}</div>
+        <div class="mkt-config-block"><h3>生效群聊</h3><p><button class="mkt-select">请选择群聊 <span>⌄</span></button></p></div>
+        <div class="mkt-config-block"><h3>执行限制</h3><p><label><input type="checkbox" checked> 仅对外部客户生效</label></p><p><label><input type="checkbox"> 命中黑名单时暂停执行</label></p></div>
+      </div>`;
+  }
   return `<div class="mkt-page-title with-tabs"><span>${title}</span>${renderMktTabs([["welcome", title], ["advanced", "高级配置"]], state.groupManageTab, "group-manage-tab")}</div>
-    <div class="mkt-section-line"><b>▣ ${title}</b><button class="button primary" data-demo-action="添加${title}">添加${title}</button></div>
+    <div class="mkt-section-line"><b>▣ ${title}</b><button class="button primary" data-modal="groupManageTask">添加${title}</button></div>
     ${renderMktSearchRow(["请输入任务名称", "请输入群聊名称", "reset"])}
-    ${renderMktTable(headers)}`;
+    ${renderMktTable(headers, groupManageRows[state.groupManageSub])}`;
 }
 
 function renderMarketingAccounts() {
+  if (state.marketingAccountTab === "rules") {
+    return `<section class="mkt-full-page">
+      <div class="mkt-context-line">AI微信营销 · 托管账号</div>
+      <div class="mkt-page-title with-tabs"><span>托管账号</span>${renderMktTabs([["accounts", "托管账号"], ["rules", "聚合规则"], ["advanced", "高级设置"]], "rules", "marketing-account-tab")}</div>
+      <div class="mkt-section-line"><b>聚合规则</b><button class="button primary" data-modal="ruleConfig">添加规则</button></div>
+      ${renderMktSearchRow(["请输入规则名称", "select:请选择托管账号", "select:请选择AI助手", "reset"])}
+      ${renderMktTable(["规则名称", "托管账号", "消息接收", "AI回复", "绑定助手", "操作"], [["测试", "Canna", "<span class=\"switch on\" data-switch></span>", "<span class=\"switch on\" data-switch></span>", "canna测试", "<button class=\"link-button\" data-modal=\"ruleConfig\">配置</button>"]])}
+    </section>`;
+  }
+  if (state.marketingAccountTab === "advanced") {
+    return `<section class="mkt-full-page">
+      <div class="mkt-context-line">AI微信营销 · 托管账号</div>
+      <div class="mkt-page-title with-tabs"><span>托管账号</span>${renderMktTabs([["accounts", "托管账号"], ["rules", "聚合规则"], ["advanced", "高级设置"]], "advanced", "marketing-account-tab")}</div>
+      <div class="settings-list">
+        <div class="setting-row"><b>同步群聊中全部对话内容</b><span class="switch on" data-switch></span></div>
+        <div class="setting-row"><b>AI群聊回复仅回复非企业员工的问题</b><span class="switch" data-switch></span></div>
+        <div class="setting-row"><b>终端设备手动回复后切换至人工服务</b><span class="switch on" data-switch></span></div>
+        <div class="setting-row vertical"><b>群聊触发关键词</b><input class="input" value="@Canna, 报价, 物流"></div>
+      </div>
+    </section>`;
+  }
   const rows = [["<span class=\"mkt-avatar tiny\">图</span> Canna", "<span class=\"tag green\">在线</span>", "Canna", "8018", "<span class=\"switch on\" data-switch></span>", "<button class=\"button small\" data-demo-action=\"账号控制台\">控制台</button>"]];
   return `<section class="mkt-full-page">
-    <div class="mkt-page-title">托管账号</div>
-    <div class="mkt-section-line"><b>托管账号列表</b><button class="button primary" data-demo-action="添加托管账号">添加账号</button></div>
+    <div class="mkt-context-line">AI微信营销 · 托管账号</div>
+    <div class="mkt-page-title with-tabs"><span>托管账号</span>${renderMktTabs([["accounts", "托管账号"], ["rules", "聚合规则"], ["advanced", "高级设置"]], state.marketingAccountTab, "marketing-account-tab")}</div>
+    <div class="mkt-section-line"><b>托管账号列表</b><button class="button primary" data-modal="authAccount">添加账号</button></div>
     ${renderMktSearchRow(["请输入托管账号名称", "select:请选择托管账号状态", "reset"])}
     ${renderMktTable(["账号信息", "状态", "托管账号", "账号ID", "消息接收", "操作"], rows)}
   </section>`;
@@ -2816,15 +3133,15 @@ function renderMaterials() {
         <h3>▰ 基础素材分组</h3>
         <input class="input" placeholder="请输入分组名称">
         <button class="mkt-material-group active">⋮ 默认分组 <span>•••</span></button>
-        <button class="link-button mkt-add-group" data-demo-action="新增分组">＋ 新增分组</button>
+        <button class="link-button mkt-add-group" data-modal="materialGroupTask">＋ 新增分组</button>
       </aside>
       <main>
-        <div class="mkt-section-line"><b>默认分组</b><div><button class="button" data-demo-action="批量添加素材">批量添加</button><button class="button primary" data-demo-action="添加素材">添加素材</button></div></div>
+        <div class="mkt-section-line"><b>默认分组</b><div><button class="button" data-modal="materialTask">批量添加</button><button class="button primary" data-modal="materialTask">添加素材</button></div></div>
         ${renderMktTabs(types, state.materialType, "material-type", "boxed dense")}
         ${renderMktSearchRow(["请输入素材标题", "reset"])}
         <div class="mkt-section-card">
-          <div class="mkt-section-head"><b>共 0 条素材</b><div><button class="button" data-demo-action="批量移动分组">批量移动分组</button><button class="button" data-demo-action="批量删除素材">批量删除</button></div></div>
-          ${renderMktTable(["素材标题", "素材摘要", "类型", "更新时间", "操作"], [], true)}
+          <div class="mkt-section-head"><b>共 ${materialRows.length} 条素材</b><div><button class="button" data-demo-action="批量移动分组">批量移动分组</button><button class="button" data-demo-action="批量删除素材">批量删除</button></div></div>
+          ${renderMktTable(["素材标题", "素材摘要", "类型", "更新时间", "操作"], materialRows, true)}
         </div>
       </main>
     </div>
@@ -2832,6 +3149,17 @@ function renderMaterials() {
 }
 
 function renderAntiSeal() {
+  if (state.antiSealTab === "settings") {
+    return `<section class="mkt-full-page">
+      <div class="mkt-page-title with-tabs"><span>加好友设置</span>${renderMktTabs([["accounts", "加好友托管账号"], ["settings", "加好友设置"]], state.antiSealTab, "anti-seal-tab")}</div>
+      <div class="mkt-settings-card">
+        <div class="mkt-settings-head"><b>加好友设置</b><button class="button primary" data-demo-action="保存加好友设置">保存</button></div>
+        <div class="mkt-config-block"><h3>发送时间</h3><p><b>* 手动任务发送时间：</b> 每日 09:00 - 21:00</p></div>
+        <div class="mkt-config-block"><h3>发送间隔</h3><p><b>* 每个托管账号发送间隔：</b><input class="input tiny-num" value="600"> - <input class="input tiny-num" value="900"> 秒</p><p><b>* 同一客户重复添加间隔：</b><input class="input tiny-num" value="30"> 天</p></div>
+        <div class="mkt-config-block"><h3>通过验证设置</h3><p><label><input type="checkbox" checked> 通过好友后自动发送欢迎语</label></p><p><label><input type="checkbox" checked> 通过后自动打标签</label></p></div>
+      </div>
+    </section>`;
+  }
   const rows = [["<span class=\"mkt-avatar tiny\">图</span> Canna", "<span class=\"tag green\">空闲中</span>", "-", "-", "-", "<span class=\"switch on\" data-switch></span>", "<button class=\"link-button\" data-demo-action=\"开始养号\">开始养号</button>"]];
   const metrics = [["在线中的账号数", 1], ["已掉线的账号数", 0], ["同步数据中的账号数", 0], ["被限制养号中的账号数", 0], ["手动养号中的账号数", 0], ["涨粉中的账号数", 0], ["空闲中的账号数", 0]];
   return `<section class="mkt-full-page">
@@ -2870,6 +3198,140 @@ function renderMarketingRecords() {
 
 function renderMarketingDocs() {
   return renderMarketingLayout("教学文档", [["intro", "功能介绍"], ["quick", "快速开始"], ["faq", "常见问题"]], "intro", "marketing-doc-sub", `<div class="mkt-page-title">教学文档</div><div class="mkt-doc-grid">${["AI微信营销功能介绍", "如何配置自动加好友", "如何创建群发任务", "如何管理素材库"].map((title) => `<div class="mini-card"><b>${title}</b><p class="subtle">查看配置说明与演示步骤。</p><button class="link-button" data-demo-action="打开${title}">查看文档</button></div>`).join("")}</div>`);
+}
+
+function renderContacts() {
+  const side = [["list", "联系人列表"], ["fields", "字段设置"]];
+  const body = state.contactsSub === "fields" ? renderContactFields() : renderContactList();
+  return `<section class="module-layout">
+    <aside class="subnav">
+      <div class="subnav-title">联系人管理</div>
+      ${side.map(([id, label]) => `<div class="subnav-item ${state.contactsSub === id ? "active" : ""}" data-contacts-sub="${id}"><span class="subnav-icon">${id === "list" ? "♙" : "T"}</span><span>${label}</span></div>`).join("")}
+    </aside>
+    <main class="module-content admin-main">${body}</main>
+  </section>`;
+}
+
+function renderContactList() {
+  const rows = [
+    ["<b>Canna郑</b><br><span class=\"subtle\">微信 · 外部联系人</span>", "139****9002", "企业微信托管", "<span class=\"mkt-tag-chip\">物流咨询</span> <span class=\"mkt-tag-chip\">报价</span>", "2026-06-19 22:46", "<button class=\"link-button\" data-demo-action=\"查看联系人详情\">详情</button>"],
+    ["<b>欧诚国际物流&集简云对接群</b><br><span class=\"subtle\">群聊 · 18人</span>", "-", "企业微信群聊", "<span class=\"mkt-tag-chip\">重点客户</span>", "2026-06-18 17:40", "<button class=\"link-button\" data-demo-action=\"查看群详情\">详情</button>"],
+  ];
+  return `<div class="admin-page">
+    <div class="admin-head">
+      <div><h1 class="page-title">联系人列表</h1><p class="subtle">统一管理来自企业微信托管、网站页面及其它渠道的客户资料。</p></div>
+      <div><button class="button" data-demo-action="导出联系人">导出</button><button class="button primary" data-demo-action="添加联系人">添加联系人</button></div>
+    </div>
+    ${renderMktSearchRow(["搜索联系人名称", "select:所属渠道", "select:客户标签", "select:跟进人", "reset"])}
+    ${renderMktTable(["客户名称", "联系方式", "来源渠道", "标签", "最近会话", "操作"], rows)}
+  </div>`;
+}
+
+function renderContactFields() {
+  const rows = [
+    ["客户名称", "文本", "系统字段", "列表展示", "<button class=\"link-button\" data-demo-action=\"编辑字段\">编辑</button>"],
+    ["手机号", "手机号", "系统字段", "检索字段", "<button class=\"link-button\" data-demo-action=\"编辑字段\">编辑</button>"],
+    ["物流需求", "多行文本", "自定义字段", "聚合对话侧栏", "<button class=\"link-button\" data-demo-action=\"编辑字段\">编辑</button>"],
+  ];
+  return `<div class="admin-page">
+    <div class="admin-head">
+      <div><h1 class="page-title">字段设置</h1><p class="subtle">对联系人字段属性进行自定义配置，可在聚合对话、客户详情和自动化流程中使用。</p></div>
+      <button class="button primary" data-modal="createField">创建字段</button>
+    </div>
+    ${renderMktSearchRow(["请输入字段名称", "select:字段类型", "reset"])}
+    ${renderMktTable(["字段名称", "字段类型", "字段来源", "使用场景", "操作"], rows)}
+  </div>`;
+}
+
+function renderTeach() {
+  const docs = [
+    ["快速开始", "从创建 AI 助手、上传知识库到接入企业微信托管的完整路径。"],
+    ["聚合对话", "自定义视图、排序搜索、工作时间、快捷消息与消息转发。"],
+    ["AI微信营销", "营销标签、消息群发、自动加好友、自动化运营和群聊管理。"],
+    ["企业微信托管", "托管账号、聚合规则、高级设置、机器人控制台与操作日志。"],
+    ["数据分析", "AI对话、人工对话、用户数据和流程执行统计。"],
+    ["团队权限", "成员邀请、角色权限、操作日志和系统设置。"],
+  ];
+  return `<section class="module-layout">
+    <aside class="subnav">
+      <div class="subnav-title">教学文档</div>
+      ${[["guide", "全部文档"], ["quick", "快速开始"], ["faq", "常见问题"]].map(([id, label]) => `<div class="subnav-item ${state.teachSub === id ? "active" : ""}" data-teach-sub="${id}"><span class="subnav-icon">◇</span><span>${label}</span></div>`).join("")}
+    </aside>
+    <main class="module-content admin-main">
+      <div class="admin-head"><div><h1 class="page-title">产品教学</h1><p class="subtle">帮助团队快速理解 Demo 中的业务配置路径。</p></div><input class="input search-input" placeholder="搜索文档"></div>
+      <div class="doc-card-grid">${docs.map(([title, desc]) => `<div class="mini-card doc-card"><b>${title}</b><p class="subtle">${desc}</p><button class="link-button" data-demo-action="打开${title}文档">查看文档</button></div>`).join("")}</div>
+    </main>
+  </section>`;
+}
+
+function renderSystemSettings() {
+  const side = [["team", "团队管理"], ["roles", "角色权限"], ["logs", "操作日志"], ["profile", "系统设置"]];
+  const body = {
+    team: renderTeamManagement,
+    roles: renderRoleManagement,
+    logs: renderSystemLogs,
+    profile: renderSystemProfile,
+  }[state.settingsSub]();
+  return `<section class="module-layout">
+    <aside class="subnav">
+      <div class="subnav-title">系统设置</div>
+      ${side.map(([id, label]) => `<div class="subnav-item ${state.settingsSub === id ? "active" : ""}" data-settings-sub="${id}"><span class="subnav-icon">${id === "team" ? "♙" : id === "roles" ? "⚙" : "▤"}</span><span>${label}</span></div>`).join("")}
+    </aside>
+    <main class="module-content admin-main">${body}</main>
+  </section>`;
+}
+
+function renderTeamManagement() {
+  const rows = [
+    ["<span class=\"member-dot\">我</span> Canna", "canna@example.com", "小组管理员", "<span class=\"tag green\">已加入</span>", "2026-06-18", "<button class=\"link-button\" data-demo-action=\"编辑成员\">编辑</button>"],
+    ["<span class=\"member-dot\">K</span> Kelvin", "kelvin@example.com", "客服坐席", "<span class=\"tag orange\">待确认</span>", "2026-06-20", "<button class=\"link-button\" data-demo-action=\"重新邀请\">重新邀请</button>"],
+  ];
+  return `<div class="admin-page">
+    <div class="admin-head"><div><h1 class="page-title">团队管理</h1><p class="subtle">邀请成员加入团队，并分配可访问的角色和小组。</p></div><button class="button primary" data-modal="inviteMember">邀请成员</button></div>
+    <div class="admin-stat-row"><div><b>2</b><span>团队成员</span></div><div><b>1</b><span>小组</span></div><div><b>3</b><span>角色</span></div><div><b>0</b><span>待处理申请</span></div></div>
+    ${renderMktSearchRow(["请输入成员名称", "select:成员角色", "select:成员状态", "reset"])}
+    ${renderMktTable(["成员", "邮箱", "角色", "状态", "加入时间", "操作"], rows)}
+  </div>`;
+}
+
+function renderRoleManagement() {
+  const rows = [
+    ["超级管理员", "拥有全部系统权限", "1", "<button class=\"link-button\" data-demo-action=\"查看角色\">查看</button>"],
+    ["小组管理员", "管理托管账号、成员与对话分配", "1", "<button class=\"link-button\" data-demo-action=\"编辑角色\">编辑</button>"],
+    ["客服坐席", "处理聚合对话与客户信息", "1", "<button class=\"link-button\" data-demo-action=\"编辑角色\">编辑</button>"],
+  ];
+  return `<div class="admin-page">
+    <div class="admin-head"><div><h1 class="page-title">角色权限</h1><p class="subtle">按岗位配置页面访问、数据范围和操作权限。</p></div><button class="button primary" data-modal="createRole">新建角色</button></div>
+    ${renderMktTable(["角色名称", "权限说明", "成员数", "操作"], rows)}
+    <div class="permission-matrix">
+      ${["AI智能体", "聚合对话", "AI微信营销", "联系人管理", "数据分析", "系统设置"].map((name) => `<div><b>${name}</b><label><input type="checkbox" checked> 查看</label><label><input type="checkbox" ${name !== "系统设置" ? "checked" : ""}> 编辑</label></div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function renderSystemLogs() {
+  const rows = [
+    ["2026-06-25 12:10", "Canna", "创建快捷回复", "聚合对话", "<span class=\"tag green\">成功</span>"],
+    ["2026-06-25 12:06", "系统", "同步企微标签", "AI微信营销", "<span class=\"tag green\">成功</span>"],
+    ["2026-06-25 11:58", "Kelvin", "导出聊天记录", "对话记录查询", "<span class=\"tag green\">成功</span>"],
+  ];
+  return `<div class="admin-page">
+    <div class="admin-head"><div><h1 class="page-title">操作日志</h1><p class="subtle">查看团队成员在系统中的关键操作记录。</p></div><button class="button" data-demo-action="导出操作日志">导出</button></div>
+    ${renderMktSearchRow(["请输入操作人", "select:操作模块", "date:开始日期 至 结束日期", "reset"])}
+    ${renderMktTable(["时间", "操作人", "操作内容", "模块", "状态"], rows)}
+  </div>`;
+}
+
+function renderSystemProfile() {
+  return `<div class="admin-page">
+    <div class="admin-head"><div><h1 class="page-title">系统设置</h1><p class="subtle">配置企业基础信息、数据安全与通知偏好。</p></div><button class="button primary" data-demo-action="保存系统设置">保存</button></div>
+    <div class="settings-list">
+      <div class="setting-row vertical"><b>企业名称</b><input class="input" value="Jelly AI Demo 团队"></div>
+      <div class="setting-row"><b>新成员加入需要管理员审核</b><span class="switch on" data-switch></span></div>
+      <div class="setting-row"><b>导出数据时添加水印</b><span class="switch on" data-switch></span></div>
+      <div class="setting-row"><b>异常任务自动通知管理员</b><span class="switch on" data-switch></span></div>
+    </div>
+  </div>`;
 }
 
 function renderAnalytics() {
@@ -3109,7 +3571,186 @@ function renderModal() {
       </div>
     `, "确定", () => {
       state.modal = null;
+      if (state.page === "marketing" && state.marketingSub === "accounts") state.marketingAccountTab = "rules";
       showToast("聚合规则已保存");
+    });
+  }
+  if (state.modal === "blastTask") {
+    const targetLabel = state.messageBlastSub === "group" ? "群聊" : state.messageBlastSub === "moments" ? "朋友圈可见客户" : "客户";
+    return modal("新建群发任务", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">任务名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="欧洲物流报价唤醒"></div>
+        <div class="form-row"><div class="label">群发类型</div><select class="select" style="width:100%"><option>${state.messageBlastSub === "group" ? "群聊群发" : state.messageBlastSub === "moments" ? "朋友圈发送" : "私聊群发"}</option></select></div>
+        <div class="form-row"><div class="label">选择托管账号</div><select class="select" style="width:100%"><option>Canna / 在线</option><option>全部在线账号</option></select></div>
+        <div class="form-row"><div class="label">发送时间</div><select class="select" style="width:100%"><option>立即发送</option><option>定时发送</option><option>循环发送</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">选择${targetLabel}</div><select class="select" style="width:100%"><option>报价咨询客户</option><option>重点客户</option><option>手动选择</option></select></div>
+      <div class="form-row"><div class="label">发送内容</div><textarea class="textarea" style="width:100%; min-height:96px">您好，近期欧洲海运有新的促销渠道，您可以发目的国、重量和件数，我帮您整理报价参考。</textarea></div>
+      <div class="form-row"><div class="label">发送素材</div><button class="button" data-demo-action="选择素材">选择素材</button> <span class="subtle">已选择：欧洲海运报价说明</span></div>
+    `, "创建任务", () => {
+      state.modal = null;
+      state.marketingSub = "blast";
+      state.messageBlastTab = "tasks";
+      showToast("群发任务已创建");
+    });
+  }
+  if (state.modal === "autoFriendTask") {
+    const titleMap = { excel: "Excel加好友任务", group: "群聊加好友任务", card: "名片加好友任务", api: "API加好友任务" };
+    const sourceField = {
+      excel: `<div class="form-row"><div class="label">导入客户文件</div><button class="button">上传 Excel</button> <span class="subtle">支持手机号、微信号、备注名</span></div>`,
+      group: `<div class="form-row"><div class="label">选择群聊</div><select class="select" style="width:100%"><option>欧诚国际物流群</option><option>欧洲报价交流群</option></select></div>`,
+      card: `<div class="form-row"><div class="label">名片来源</div><select class="select" style="width:100%"><option>销售成员转发名片</option><option>群聊内客户名片</option></select></div>`,
+      api: `<div class="form-row"><div class="label">API来源</div><select class="select" style="width:100%"><option>官网表单 Webhook</option><option>CRM新线索同步</option></select></div>`,
+    }[state.autoFriendSub] || "";
+    return modal(titleMap[state.autoFriendSub] || "自动加好友任务", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">任务名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="${titleMap[state.autoFriendSub] || "自动加好友"}"></div>
+        <div class="form-row"><div class="label">加好友账号</div><select class="select" style="width:100%"><option>Canna / 在线</option><option>按空闲账号分配</option></select></div>
+      </div>
+      ${sourceField}
+      <div class="grid-2">
+        <div class="form-row"><div class="label">通过后打标签</div><select class="select" style="width:100%"><option>报价咨询</option><option>展会客户</option><option>重点客户</option></select></div>
+        <div class="form-row"><div class="label">发送频率</div><select class="select" style="width:100%"><option>按防封设置执行</option><option>低频安全模式</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">打招呼内容</div><textarea class="textarea" style="width:100%; min-height:92px">您好，我是Jelly AI客服，方便加您沟通物流报价吗？</textarea></div>
+    `, "创建任务", () => {
+      state.modal = null;
+      state.marketingSub = "friend";
+      showToast("自动加好友任务已创建");
+    });
+  }
+  if (state.modal === "keywordReplyTask") {
+    return modal("添加关键词回复", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">任务名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="物流报价回复"></div>
+        <div class="form-row"><div class="label">关键词类型</div><select class="select" style="width:100%"><option>模糊匹配</option><option>精准匹配</option></select></div>
+        <div class="form-row"><div class="label">匹配规则</div><select class="select" style="width:100%"><option>包含任一关键词</option><option>包含全部关键词</option></select></div>
+        <div class="form-row"><div class="label">生效范围</div><select class="select" style="width:100%"><option>私聊+群聊</option><option>仅私聊</option><option>仅群聊</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">触发关键词</div><input class="input" style="width:100%" value="报价, 运费, 价格"></div>
+      <div class="form-row"><div class="label">回复素材</div><select class="select" style="width:100%"><option>欧洲海运报价说明</option><option>售后处理FAQ</option></select></div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "operation";
+      state.operationSub = "keywordReply";
+      state.operationTab = "content";
+      showToast("关键词回复已保存");
+    });
+  }
+  if (state.modal === "keywordGroupTask") {
+    return modal("新建拉群任务", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">任务名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="欧洲物流关键词拉群"></div>
+        <div class="form-row"><div class="label">目标群聊</div><select class="select" style="width:100%"><option>欧洲报价交流群</option><option>核心客户服务群</option></select></div>
+        <div class="form-row"><div class="label">生效主体</div><select class="select" style="width:100%"><option>Canna</option><option>全部托管账号</option></select></div>
+        <div class="form-row"><div class="label">匹配规则</div><select class="select" style="width:100%"><option>命中任一关键词</option><option>命中全部关键词</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">触发关键词</div><input class="input" style="width:100%" value="欧洲, 报价, 海运"></div>
+      <div class="form-row"><div class="label">入群提示语</div><textarea class="textarea" style="width:100%; min-height:86px">我为您拉一个欧洲物流报价交流群，群里可以同步获取渠道时效和价格参考。</textarea></div>
+    `, "创建任务", () => {
+      state.modal = null;
+      state.marketingSub = "operation";
+      state.operationTab = "content";
+      showToast("拉群任务已创建");
+    });
+  }
+  if (state.modal === "sopTask") {
+    const titleMap = { newCustomer: "新客户SOP", privateSop: "私聊SOP", groupSop: "群聊SOP", momentsSop: "朋友圈SOP", tagSop: "标签SOP" };
+    return modal(`新建${titleMap[state.operationSub] || "SOP"}`, `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">任务名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="沉默客户唤醒"></div>
+        <div class="form-row"><div class="label">托管账号</div><select class="select" style="width:100%"><option>Canna / 在线</option><option>全部在线账号</option></select></div>
+        <div class="form-row"><div class="label">触发条件</div><select class="select" style="width:100%"><option>客户通过好友后</option><option>打上指定标签后</option><option>客户长时间未回复</option></select></div>
+        <div class="form-row"><div class="label">任务状态</div><select class="select" style="width:100%"><option>保存并开启</option><option>保存为草稿</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">发送内容</div><textarea class="textarea" style="width:100%; min-height:96px">您好，我这边可以继续帮您整理欧洲物流报价。如果您方便，可以发一下目的国、重量和件数。</textarea></div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "operation";
+      state.operationTab = "content";
+      showToast("SOP任务已保存");
+    });
+  }
+  if (state.modal === "groupManageTask") {
+    const title = { welcome: "入群欢迎语", robot: "自动踢人", invite: "接受群邀请", transfer: "多群转播" }[state.groupManageSub] || "群聊任务";
+    return modal(`添加${title}`, `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">任务名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="${title}规则"></div>
+        <div class="form-row"><div class="label">生效群聊</div><select class="select" style="width:100%"><option>欧洲报价交流群</option><option>全部客户群</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">规则内容</div><textarea class="textarea" style="width:100%; min-height:96px">${state.groupManageSub === "welcome" ? "欢迎加入群聊，请发送目的国+重量获取报价。" : "命中配置规则后自动执行，执行前记录操作日志。"}</textarea></div>
+      <div class="form-row"><div class="label">状态</div><label><input type="radio" checked> 立即开启</label> <label style="margin-left:12px"><input type="radio"> 暂不开启</label></div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "groups";
+      showToast(`${title}已保存`);
+    });
+  }
+  if (state.modal === "materialTask") {
+    return modal("添加素材", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">素材标题 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="欧洲海运报价说明"></div>
+        <div class="form-row"><div class="label">素材类型</div><select class="select" style="width:100%"><option>文本话术</option><option>图片</option><option>网页</option><option>文件</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">素材摘要</div><input class="input" style="width:100%" value="按重量、体积、国家、地址类型计算报价"></div>
+      <div class="form-row"><div class="label">素材内容</div><textarea class="textarea" style="width:100%; min-height:110px">您好，物流报价一般需要结合发货地、收货地、重量体积、货物类型和派送方式来核算。</textarea></div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "materials";
+      showToast("素材已保存");
+    });
+  }
+  if (state.modal === "materialGroupTask") {
+    return modal("新增素材分组", `
+      <div class="form-row"><div class="label">分组名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="报价素材"></div>
+      <div class="form-row"><div class="label">可见范围</div><select class="select" style="width:100%"><option>当前小组</option><option>全部小组</option><option>仅自己</option></select></div>
+    `, "保存", () => {
+      state.modal = null;
+      showToast("素材分组已创建");
+    });
+  }
+  if (state.modal === "tagGroupTask") {
+    return modal("新建自定义标签组", `
+      <div class="form-row"><div class="label">标签组名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="客户意向"></div>
+      <div class="form-row"><div class="label">标签</div><input class="input" style="width:100%" value="报价咨询, 待跟进, 重点客户"></div>
+      <div class="form-row"><div class="label">可见范围</div><select class="select" style="width:100%"><option>全部小组</option><option>当前小组</option></select></div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "tags";
+      showToast("自定义标签组已保存");
+    });
+  }
+  if (state.modal === "keywordTagTask") {
+    return modal("添加关键词标签", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">规则名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="报价关键词打标"></div>
+        <div class="form-row"><div class="label">关键词类型</div><select class="select" style="width:100%"><option>模糊匹配</option><option>精准匹配</option></select></div>
+      </div>
+      <div class="form-row"><div class="label">关键词</div><input class="input" style="width:100%" value="报价, 运费, 价格"></div>
+      <div class="grid-2">
+        <div class="form-row"><div class="label">企微标签</div><select class="select" style="width:100%"><option>报价咨询</option><option>售后中</option></select></div>
+        <div class="form-row"><div class="label">自定义标签</div><select class="select" style="width:100%"><option>待跟进</option><option>重点客户</option></select></div>
+      </div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "tags";
+      state.marketingTagSub = "keyword";
+      state.keywordTagTab = "rules";
+      showToast("关键词标签规则已保存");
+    });
+  }
+  if (state.modal === "blacklistTask") {
+    return modal("添加黑名单", `
+      <div class="grid-2">
+        <div class="form-row"><div class="label">客户名称</div><input class="input" style="width:100%" value="测试黑名单客户"></div>
+        <div class="form-row"><div class="label">联系方式</div><input class="input" style="width:100%" value="138****9001"></div>
+      </div>
+      <div class="form-row"><div class="label">原因</div><textarea class="textarea" style="width:100%; min-height:86px">频繁骚扰或无效客户，暂停自动触达。</textarea></div>
+    `, "保存", () => {
+      state.modal = null;
+      state.marketingSub = "friend";
+      state.autoFriendSub = "blacklist";
+      showToast("黑名单已保存");
     });
   }
   if (state.modal === "addSkillTool") {
@@ -3239,6 +3880,36 @@ function renderModal() {
       showToast("执行动作已添加");
     };
     return renderFlowPickerModal("添加执行动作", flowActionGroups, state.flowActionCategory, "flow-action", "flowActionCategory");
+  }
+  if (state.modal === "createField") {
+    return modal("创建字段", `
+      <div class="form-row"><div class="label">字段名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="物流需求"></div>
+      <div class="form-row"><div class="label">字段类型</div><select class="select" style="width:100%"><option>文本</option><option>多行文本</option><option>数字</option><option>日期</option><option>单选</option></select></div>
+      <div class="form-row"><div class="label">使用场景</div><label><input type="checkbox" checked> 联系人详情</label> <label><input type="checkbox" checked> 聚合对话侧栏</label> <label><input type="checkbox"> 自动化流程变量</label></div>
+    `, "创建", () => {
+      state.modal = null;
+      showToast("联系人字段已创建");
+    });
+  }
+  if (state.modal === "inviteMember") {
+    return modal("邀请成员", `
+      <div class="form-row"><div class="label">成员邮箱或手机号 <span style="color:var(--red)">*</span></div><textarea class="textarea" style="width:100%" placeholder="每行一个成员">kelvin@example.com</textarea></div>
+      <div class="form-row"><div class="label">分配角色</div><select class="select" style="width:100%"><option>客服坐席</option><option>小组管理员</option><option>数据分析员</option></select></div>
+      <div class="form-row"><div class="label">可见小组</div><select class="select" style="width:100%"><option>gs4758</option><option>全部小组</option></select></div>
+    `, "发送邀请", () => {
+      state.modal = null;
+      showToast("邀请已发送");
+    });
+  }
+  if (state.modal === "createRole") {
+    return modal("新建角色", `
+      <div class="form-row"><div class="label">角色名称 <span style="color:var(--red)">*</span></div><input class="input" style="width:100%" value="运营专员"></div>
+      <div class="form-row"><div class="label">角色说明</div><textarea class="textarea" style="width:100%">可管理 AI微信营销任务、素材和对话记录。</textarea></div>
+      <div class="form-row"><div class="label">权限范围</div>${["AI微信营销", "聚合对话", "联系人管理", "数据分析"].map((x) => `<label style="display:block; margin:8px 0"><input type="checkbox" checked> ${x}</label>`).join("")}</div>
+    `, "创建", () => {
+      state.modal = null;
+      showToast("角色已创建");
+    });
   }
   if (state.modal === "alertBot") {
     return modal("添加报警机器人", `
@@ -3525,7 +4196,7 @@ function renderKnowledgeWizard() {
   ${step === 1 ? `<div class="grid-2">${["文本", "整个网站", "文档文件", "自定义知识库"].map((x, i) => `<div class="mini-card" style="${i === 2 ? "border-color:var(--blue)" : ""}"><b>${x}</b><br><span class="subtle">用于问答检索与智能回复</span></div>`).join("")}</div>` : ""}
   ${step === 2 ? `<div class="empty" style="border:1px dashed var(--line-dark); border-radius:8px">＋ 将文件拖拽至此区域或选择文件上传<br><span class="subtle">支持 xlsx、docx、pdf、txt、csv 等文件</span></div>` : ""}
   ${step === 3 ? `<div class="mini-card"><div class="mini-card-head">数据处理中 <span class="tag blue">86%</span></div><div class="subtle">正在切分文档、生成索引、抽取问答对。</div></div>` : ""}
-  ${step === 4 ? `<div class="empty">✅ 知识库已创建完成，可绑定给 Jerry AI 助手使用。</div>` : ""}`;
+  ${step === 4 ? `<div class="empty">✅ 知识库已创建完成，可绑定给 Jelly AI 助手使用。</div>` : ""}`;
 }
 
 function renderAuthWizard() {
@@ -3620,7 +4291,19 @@ function bindEvents() {
   const sidebarCollapse = document.querySelector("[data-sidebar-collapse]");
   if (sidebarCollapse) sidebarCollapse.addEventListener("click", () => setState({ sidebarCollapsed: !state.sidebarCollapsed }));
   document.querySelectorAll("[data-marketing-sub]").forEach((el) =>
-    el.addEventListener("click", () => setState({ page: "marketing", selectedAssistant: null, marketingNavOpen: true, marketingSub: el.dataset.marketingSub }))
+    el.addEventListener("click", () => setState({ page: "marketing", selectedAssistant: null, marketingNavOpen: true, marketingSub: el.dataset.marketingSub, marketingAccountTab: "accounts" }))
+  );
+  document.querySelectorAll("[data-channel-category]").forEach((el) =>
+    el.addEventListener("click", () => setState({ channelCategory: el.dataset.channelCategory }))
+  );
+  document.querySelectorAll("[data-contacts-sub]").forEach((el) =>
+    el.addEventListener("click", () => setState({ contactsSub: el.dataset.contactsSub }))
+  );
+  document.querySelectorAll("[data-teach-sub]").forEach((el) =>
+    el.addEventListener("click", () => setState({ teachSub: el.dataset.teachSub }))
+  );
+  document.querySelectorAll("[data-settings-sub]").forEach((el) =>
+    el.addEventListener("click", () => setState({ settingsSub: el.dataset.settingsSub }))
   );
   document.querySelectorAll("[data-workbench-filter]").forEach((el) =>
     el.addEventListener("click", () => showToast(`${el.textContent.trim()}视图已切换`))
@@ -3660,6 +4343,9 @@ function bindEvents() {
   );
   document.querySelectorAll("[data-group-manage-tab]").forEach((el) =>
     el.addEventListener("click", () => setState({ groupManageTab: el.dataset.groupManageTab }))
+  );
+  document.querySelectorAll("[data-marketing-account-tab]").forEach((el) =>
+    el.addEventListener("click", () => setState({ marketingAccountTab: el.dataset.marketingAccountTab }))
   );
   document.querySelectorAll("[data-material-scope]").forEach((el) =>
     el.addEventListener("click", () => setState({ materialScope: el.dataset.materialScope }))

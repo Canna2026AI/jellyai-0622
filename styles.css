@@ -63,7 +63,7 @@ button {
   width: 220px;
   z-index: 20;
   transition: width .2s ease;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .sidebar.collapsed {
@@ -94,8 +94,9 @@ button {
 .nav {
   padding: 12px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding-bottom: 18px;
+  padding-bottom: 72px;
   scrollbar-width: none;
 }
 
@@ -5544,6 +5545,12 @@ tr:last-child td {
   color: #5b35ff;
 }
 
+.mkt-context-line {
+  padding: 18px 28px 0;
+  color: #98a2b3;
+  font-size: 13px;
+}
+
 .mkt-filter-row {
   min-height: 64px;
   display: flex;
@@ -6030,7 +6037,7 @@ tr:last-child td {
 .mkt-record-page {
   min-height: calc(100vh - 52px);
   display: grid;
-  grid-template-rows: 70px 1fr;
+  grid-template-rows: auto 1fr;
   background: #f5f7fb;
 }
 
@@ -6039,12 +6046,35 @@ tr:last-child td {
 }
 
 .mkt-record-filters .mkt-filter-row {
+  align-items: flex-start;
   border-bottom: 1px solid var(--line);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.mkt-record-filters .mkt-filter-left {
+  flex: 1 1 760px;
+}
+
+.mkt-record-filters .mkt-filter-right {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.mkt-record-filters .mkt-input,
+.mkt-record-filters .mkt-select {
+  width: min(220px, calc((100vw - 320px) / 3));
+  min-width: 150px;
+}
+
+.mkt-record-filters .mkt-date {
+  width: min(300px, calc((100vw - 320px) / 2));
+  min-width: 230px;
 }
 
 .mkt-record-body {
   display: grid;
-  grid-template-columns: 330px 1fr;
+  grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -6098,6 +6128,7 @@ tr:last-child td {
 .mkt-record-chat {
   overflow: auto;
   padding-bottom: 80px;
+  min-width: 0;
 }
 
 .mkt-record-chat-head {
@@ -6116,7 +6147,7 @@ tr:last-child td {
 }
 
 .mkt-record-more {
-  width: 720px;
+  width: min(720px, calc(100% - 56px));
   margin: 28px auto;
   border-top: 1px solid #cbd5e1;
   text-align: center;
@@ -6139,12 +6170,14 @@ tr:last-child td {
 }
 
 .mkt-record-message p {
-  max-width: 940px;
+  max-width: min(940px, calc(100% - 96px));
+  min-width: 0;
   margin: 6px 0;
   padding: 12px 14px;
   border-radius: 4px;
   background: #e5e7eb;
   line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 
 .mkt-record-message.right p {
@@ -6174,6 +6207,118 @@ tr:last-child td {
   padding: 2px 8px;
   color: #526987;
   background: #fff;
+}
+
+.channel-library-main,
+.admin-main {
+  background: #f5f7fb;
+}
+
+.channel-library-head,
+.admin-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.channel-library-head p,
+.admin-head p {
+  margin: 4px 0 0;
+}
+
+.channel-category-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 8px;
+}
+
+.channel-category-strip button {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--line-dark);
+  background: #fff;
+  border-radius: 6px;
+  color: #344054;
+}
+
+.channel-category-strip button.active {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.admin-page {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: calc(100vh - 120px);
+  padding: 22px;
+}
+
+.admin-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+
+.admin-stat-row > div {
+  background: #f8faff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+}
+
+.admin-stat-row b {
+  display: block;
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.admin-stat-row span {
+  color: var(--muted);
+}
+
+.doc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.doc-card {
+  min-height: 150px;
+}
+
+.doc-card p {
+  line-height: 1.7;
+}
+
+.permission-matrix {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.permission-matrix > div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.permission-matrix b {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.permission-matrix label {
+  margin-right: 14px;
+  color: #526987;
 }
 
 @media (max-width: 1200px) {
